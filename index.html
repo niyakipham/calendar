@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Niyaki Pham Calender</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Thêm thư viện Marked.js để render Markdown sang HTML -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- Thêm thư viện JSZip để xử lý nén/giải nén file zip -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Bảng màu mang hơi thở "Clean & Soft" */
+        :root {
+            --bg-viewport: #F0F2F6; /* Nền xám khói rất nhẹ nhàng */
+            --bg-card-main: #FFFFFF; /* Trắng tinh khôi cho toàn bộ App */
+            --bg-content-area: #F8F9FB; /* Nền xám sữa cho khu vực lịch để làm nổi bật thẻ trắng */
+            --text-primary: #111827;
+            --text-secondary: #6B7280;
+            --accent-blue: #0066FF; /* Màu xanh rực rỡ lấy từ nút Upload */
+            --accent-blue-hover: #005ce6;
+            --border-soft: #F1F3F5;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-viewport);
+            color: var(--text-primary);
+            margin: 0;
+            overflow: hidden;
+        }
+
+        /* Thanh cuộn mềm mại tựa đám mây */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #E5E7EB; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #D1D5DB; }
+
+        /* Hiệu ứng bay bổng cho thẻ */
+        .hover-lift {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 20px -10px rgba(0, 0, 0, 0.05);
+        }
+        .hover-lift:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.1);
+            border-color: transparent;
+            z-index: 10;
+        }
+
+        /* Viền đứt khúc nghệ thuật */
+        .dashed-column {
+            background-image: linear-gradient(to bottom, transparent 50%, var(--border-soft) 50%);
+            background-size: 1px 20px;
+            background-repeat: repeat-y;
+            background-position: right;
+        }
+        .dashed-column:last-child {
+            background-image: none;
+        }
+
+        /* Style cơ bản cho nội dung Markdown hiển thị */
+        .prose h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .prose h2 { font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; }
+        .prose h3 { font-size: 1.125rem; font-weight: 600; margin-bottom: 0.5rem; }
+        .prose p { margin-bottom: 0.5rem; }
+        .prose a { color: var(--accent-blue); text-decoration: underline; }
+        .prose blockquote { border-left: 3px solid var(--accent-blue); padding-left: 1rem; color: var(--text-secondary); font-style: italic; }
+        .prose img { max-width: 100%; border-radius: 0.5rem; margin-top: 0.5rem; }
+        .prose ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 0.5rem; }
+    </style>
+</head>
+<body class="h-screen w-full p-4 md:p-8 flex items-center justify-center">
+
+    <!-- Khối Wrapper Chính -->
+    <div class="w-full h-full max-w-[1600px] bg-[var(--bg-card-main)] rounded-[2.5rem] shadow-[0_8px_40px_rgba(0,0,0,0.04)] flex overflow-hidden border border-white">
+        
+        <!-- Sidebar -->
+        <aside class="w-72 bg-white flex flex-col z-20 flex-shrink-0">
+            <!-- Logo Area -->
+            <div class="p-8 flex items-center gap-3">
+                <div class="w-10 h-10 rounded-2xl bg-[var(--accent-blue)] flex items-center justify-center shadow-[0_4px_15px_rgba(0,102,255,0.3)]">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477-4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                </div>
+                <h1 class="font-bold text-2xl tracking-tight text-gray-900">Niyaki Pham</h1>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="flex-1 px-6 py-2 space-y-2">
+                <a href="#" id="nav-calendar" onclick="switchTab('calendar')" class="nav-item active flex items-center gap-4 px-4 py-3.5 bg-[var(--accent-blue)] text-white rounded-2xl shadow-[0_4px_15px_rgba(0,102,255,0.25)] transition-all font-semibold">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    <span>Lịch học</span>
+                </a>
+                <a href="#" id="nav-notes" onclick="switchTab('notes')" class="nav-item flex items-center gap-4 px-4 py-3.5 text-gray-400 hover:text-gray-800 hover:bg-gray-50 rounded-2xl transition-all font-medium">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                    <span>Ghi chú</span>
+                </a>
+                <a href="#" id="nav-documents" onclick="switchTab('documents')" class="nav-item flex items-center gap-4 px-4 py-3.5 text-gray-400 hover:text-gray-800 hover:bg-gray-50 rounded-2xl transition-all font-medium">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
+                    <span>Tài liệu</span>
+                </a>
+            </nav>
+            
+            <div class="p-6 mb-2"></div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 p-4 md:py-6 md:pr-6 h-full">
+            <div class="bg-[var(--bg-content-area)] rounded-[2rem] h-full w-full flex flex-col overflow-hidden relative border border-[var(--border-soft)] shadow-inner">
+                
+                <!-- ==================== VIEW: LỊCH HỌC ==================== -->
+                <div id="view-calendar" class="flex flex-col h-full w-full transition-opacity duration-300">
+                    <header class="h-[88px] flex-shrink-0 flex items-center justify-between px-8 z-10 border-b border-[var(--border-soft)] bg-white/50 backdrop-blur-sm">
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-900">Lịch trình tuần này</h2>
+                            <p class="text-sm text-gray-500 font-medium mt-1">Sắp xếp những ý tưởng rực rỡ 🌿</p>
+                        </div>
+                        <button class="w-12 h-12 rounded-full bg-white shadow-[0_4px_15px_rgba(0,0,0,0.05)] border border-gray-100 flex items-center justify-center text-gray-800 hover:scale-105 transition-transform">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                        </button>
+                    </header>
+
+                    <div class="flex-1 overflow-auto p-2 md:p-4">
+                        <div class="min-w-[1100px] h-full flex flex-col bg-white rounded-3xl border border-[var(--border-soft)] shadow-[0_2px_10px_rgba(0,0,0,0.02)] overflow-hidden">
+                            <div class="flex flex-shrink-0 border-b border-[var(--border-soft)]">
+                                <div class="w-16 md:w-20 flex-shrink-0 border-r border-[var(--border-soft)]"></div>
+                                <div id="calendarHeader" class="flex-1 grid grid-cols-7"></div>
+                            </div>
+                            <div class="flex-1 flex">
+                                <div class="w-16 md:w-20 flex-shrink-0 flex flex-col border-r border-[var(--border-soft)] bg-gray-50/30">
+                                    <div class="flex-1 flex items-center justify-center border-b border-dashed border-[var(--border-soft)] relative">
+                                        <div class="absolute inset-0 flex items-center justify-center">
+                                            <span class="-rotate-90 font-bold text-amber-500 bg-amber-50 px-5 py-2 rounded-xl text-xs uppercase tracking-widest shadow-sm border border-amber-100/50 whitespace-nowrap">☀️ Sáng</span>
+                                        </div>
+                                    </div>
+                                    <div class="flex-1 flex items-center justify-center relative">
+                                        <div class="absolute inset-0 flex items-center justify-center">
+                                            <span class="-rotate-90 font-bold text-indigo-500 bg-indigo-50 px-5 py-2 rounded-xl text-xs uppercase tracking-widest shadow-sm border border-indigo-100/50 whitespace-nowrap">🌆 Chiều</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="scheduleBoard" class="flex-1 grid grid-cols-7"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==================== VIEW: GHI CHÚ ==================== -->
+                <div id="view-notes" class="flex flex-col h-full w-full hidden transition-opacity duration-300">
+                    
+                    <!-- Header Ghi chú -->
+                    <header class="h-[88px] flex-shrink-0 flex items-center justify-between px-8 z-10 border-b border-[var(--border-soft)] bg-white/50 backdrop-blur-sm">
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-900">Ghi chú của tôi</h2>
+                            <p class="text-sm text-gray-500 font-medium mt-1">Lưu giữ mọi suy nghĩ và ý tưởng ✍️</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <!-- Input ẩn để nhận file zip -->
+                            <input type="file" id="import-zip-input" accept=".zip" class="hidden" onchange="importNotesFromZip(event)">
+                            
+                            <button onclick="document.getElementById('import-zip-input').click()" class="hidden lg:flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all font-semibold text-sm shadow-sm" title="Nhập dữ liệu">
+                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                                Nhập Zip
+                            </button>
+                            
+                            <button onclick="exportNotesToZip()" class="hidden lg:flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all font-semibold text-sm shadow-sm" title="Xuất dữ liệu">
+                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                Xuất Zip
+                            </button>
+
+                            <div class="w-px h-6 bg-gray-200 hidden lg:block mx-1"></div>
+
+                            <button onclick="showNoteEditor()" class="flex items-center gap-2 px-5 py-2.5 bg-[var(--accent-blue)] text-white rounded-xl shadow-[0_4px_15px_rgba(0,102,255,0.25)] hover:bg-[var(--accent-blue-hover)] transition-all font-semibold text-sm">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                Tạo ghi chú
+                            </button>
+                        </div>
+                    </header>
+
+                    <!-- Vùng Danh sách Ghi chú -->
+                    <div id="notes-list-area" class="flex-1 overflow-auto p-6 relative">
+                        <div id="notes-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <!-- JS sẽ render thẻ ghi chú vào đây -->
+                        </div>
+                    </div>
+
+                    <!-- Vùng Trình soạn thảo Markdown (Ẩn mặc định) -->
+                    <div id="note-editor-area" class="flex-1 hidden flex-col bg-white overflow-hidden rounded-b-[2rem]">
+                        
+                        <!-- Toolbar Markdown -->
+                        <div class="flex-shrink-0 border-b border-[var(--border-soft)] bg-gray-50/50 p-3 px-6 flex items-center gap-2 overflow-x-auto">
+                            <button onclick="insertMarkdown('bold')" title="Chữ đậm" class="w-9 h-9 flex items-center justify-center rounded-lg text-gray-600 hover:bg-gray-200 hover:text-gray-900 transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 4h8a4 4 0 014 4 4 4 0 01-4 4H6z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 12h9a4 4 0 014 4 4 4 0 01-4 4H6z"></path></svg>
+                            </button>
+                            <button onclick="insertMarkdown('italic')" title="Chữ nghiêng" class="w-9 h-9 flex items-center justify-center rounded-lg text-gray-600 hover:bg-gray-200 hover:text-gray-900 transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                            </button>
+                            <div class="w-px h-5 bg-gray-300 mx-1"></div>
+                            <button onclick="insertMarkdown('h1')" title="Tiêu đề 1" class="w-9 h-9 flex items-center justify-center rounded-lg text-gray-600 hover:bg-gray-200 hover:text-gray-900 font-bold text-sm transition-colors">H1</button>
+                            <button onclick="insertMarkdown('h2')" title="Tiêu đề 2" class="w-9 h-9 flex items-center justify-center rounded-lg text-gray-600 hover:bg-gray-200 hover:text-gray-900 font-bold text-sm transition-colors">H2</button>
+                            <button onclick="insertMarkdown('h3')" title="Tiêu đề 3" class="w-9 h-9 flex items-center justify-center rounded-lg text-gray-600 hover:bg-gray-200 hover:text-gray-900 font-bold text-sm transition-colors">H3</button>
+                            <div class="w-px h-5 bg-gray-300 mx-1"></div>
+                            <button onclick="insertMarkdown('quote')" title="Trích dẫn" class="w-9 h-9 flex items-center justify-center rounded-lg text-gray-600 hover:bg-gray-200 hover:text-gray-900 transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
+                            </button>
+                            <button onclick="insertMarkdown('link')" title="Chèn Link" class="w-9 h-9 flex items-center justify-center rounded-lg text-gray-600 hover:bg-gray-200 hover:text-gray-900 transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+                            </button>
+                            <button onclick="insertMarkdown('image')" title="Chèn Ảnh" class="w-9 h-9 flex items-center justify-center rounded-lg text-gray-600 hover:bg-gray-200 hover:text-gray-900 transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            </button>
+                            <button onclick="insertMarkdown('list')" title="Danh sách" class="w-9 h-9 flex items-center justify-center rounded-lg text-gray-600 hover:bg-gray-200 hover:text-gray-900 transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
+                            </button>
+                            
+                            <div class="flex-1"></div>
+                            
+                            <!-- Cụm nút hành động -->
+                            <button onclick="hideNoteEditor()" class="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-800 transition-colors">Hủy</button>
+                            <button onclick="saveNote()" class="px-6 py-2 bg-[var(--accent-blue)] text-white text-sm font-semibold rounded-lg shadow hover:bg-[var(--accent-blue-hover)] transition-colors">Lưu ghi chú</button>
+                        </div>
+
+                        <!-- Khung soạn thảo -->
+                        <div class="flex-1 flex flex-col p-6 overflow-hidden">
+                            <input type="text" id="note-title-input" placeholder="Tiêu đề ghi chú..." class="w-full text-2xl font-bold text-gray-900 placeholder-gray-300 bg-transparent border-none outline-none mb-4">
+                            <textarea id="note-content-input" placeholder="Viết nội dung của bạn tại đây (Hỗ trợ định dạng Markdown)..." class="flex-1 w-full bg-transparent resize-none outline-none text-gray-700 leading-relaxed font-medium text-[15px]"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==================== VIEW: TÀI LIỆU ==================== -->
+                <div id="view-documents" class="flex flex-col h-full w-full hidden transition-opacity duration-300">
+                    <header class="h-[88px] flex-shrink-0 flex items-center justify-between px-8 z-10 border-b border-[var(--border-soft)] bg-white/50 backdrop-blur-sm">
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-900">Tài liệu học tập</h2>
+                            <p class="text-sm text-gray-500 font-medium mt-1">Quản lý kho tàng kiến thức 📚</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <!-- Input ẩn để nhận file zip -->
+                            <input type="file" id="import-doc-zip-input" accept=".zip" class="hidden" onchange="importDocsFromZip(event)">
+                            
+                            <button onclick="document.getElementById('import-doc-zip-input').click()" class="hidden lg:flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all font-semibold text-sm shadow-sm" title="Nhập dữ liệu">
+                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                                Nhập Zip
+                            </button>
+                            
+                            <button onclick="exportDocsToZip()" class="hidden lg:flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all font-semibold text-sm shadow-sm" title="Xuất dữ liệu">
+                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                Xuất Zip
+                            </button>
+
+                            <div class="w-px h-6 bg-gray-200 hidden lg:block mx-1"></div>
+
+                            <button id="btn-create-doc-group" onclick="openCreateGroupModal()" class="flex items-center gap-2 px-5 py-2.5 bg-[var(--accent-blue)] text-white rounded-xl shadow-[0_4px_15px_rgba(0,102,255,0.25)] hover:bg-[var(--accent-blue-hover)] transition-all font-semibold text-sm">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                Tạo tài liệu
+                            </button>
+                        </div>
+                    </header>
+
+                    <!-- Danh sách thư mục tài liệu -->
+                    <div id="doc-groups-area" class="flex-1 overflow-auto p-6">
+                        <div id="doc-groups-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <!-- JS render thẻ thư mục -->
+                        </div>
+                    </div>
+
+                    <!-- Chi tiết 1 thư mục (Danh sách Link) -->
+                    <div id="single-group-area" class="flex-1 hidden flex-col bg-white overflow-hidden rounded-b-[2rem]">
+                        <div class="flex-shrink-0 border-b border-[var(--border-soft)] bg-gray-50/50 p-4 px-6 flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <button onclick="closeGroupDetails()" class="w-10 h-10 flex items-center justify-center rounded-full bg-white border border-gray-200 text-gray-600 hover:bg-gray-100 transition-colors shadow-sm">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                                </button>
+                                <div>
+                                    <h3 id="current-group-title" class="text-lg font-bold text-gray-900 flex items-center gap-2">
+                                        <span id="current-group-color-dot" class="w-3 h-3 rounded-full bg-blue-500"></span>
+                                        Tên Thư Mục
+                                    </h3>
+                                    <p class="text-xs text-gray-500 font-medium">Quản lý các trang web tài liệu</p>
+                                </div>
+                            </div>
+                            <button onclick="openCreateLinkModal()" class="px-5 py-2 bg-gray-900 text-white rounded-xl shadow-sm hover:bg-gray-800 transition-all font-semibold text-sm flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+                                Tạo tài liệu web
+                            </button>
+                        </div>
+                        <div class="flex-1 overflow-auto p-6 bg-[var(--bg-content-area)]">
+                            <div id="links-list-container" class="flex flex-col gap-3 max-w-4xl mx-auto">
+                                <!-- JS render thẻ link -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals cho Tài liệu -->
+    <div id="modal-group" class="fixed inset-0 z-50 hidden items-center justify-center bg-gray-900/40 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl shadow-xl w-full max-w-md overflow-hidden transform transition-all p-6 mx-4">
+            <h3 class="text-xl font-bold text-gray-900 mb-4">Tạo nhóm tài liệu mới</h3>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1.5">Tên tài liệu</label>
+                <input type="text" id="group-name-input" placeholder="Ví dụ: Tài liệu Frontend..." class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--accent-blue)] focus:border-transparent transition-all">
+            </div>
+            <div class="mb-8">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Chọn màu sắc (Chrome Tabs Style)</label>
+                <div class="flex items-center gap-3" id="color-picker">
+                    <button type="button" onclick="selectColor('blue', this)" class="color-btn w-8 h-8 rounded-full bg-blue-500 ring-2 ring-offset-2 ring-blue-500 transition-all"></button>
+                    <button type="button" onclick="selectColor('purple', this)" class="color-btn w-8 h-8 rounded-full bg-purple-500 ring-0 ring-offset-2 ring-purple-500 transition-all"></button>
+                    <button type="button" onclick="selectColor('pink', this)" class="color-btn w-8 h-8 rounded-full bg-pink-500 ring-0 ring-offset-2 ring-pink-500 transition-all"></button>
+                    <button type="button" onclick="selectColor('orange', this)" class="color-btn w-8 h-8 rounded-full bg-orange-500 ring-0 ring-offset-2 ring-orange-500 transition-all"></button>
+                    <button type="button" onclick="selectColor('green', this)" class="color-btn w-8 h-8 rounded-full bg-green-500 ring-0 ring-offset-2 ring-green-500 transition-all"></button>
+                </div>
+            </div>
+            <div class="flex justify-end gap-3">
+                <button onclick="closeCreateGroupModal()" class="px-5 py-2.5 text-sm font-semibold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">Hủy</button>
+                <button onclick="saveGroup()" class="px-5 py-2.5 bg-[var(--accent-blue)] text-white text-sm font-semibold rounded-xl hover:bg-[var(--accent-blue-hover)] shadow-sm transition-colors">Tạo mới</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Tạo Link -->
+    <div id="modal-link" class="fixed inset-0 z-50 hidden items-center justify-center bg-gray-900/40 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl shadow-xl w-full max-w-md overflow-hidden transform transition-all p-6 mx-4">
+            <h3 class="text-xl font-bold text-gray-900 mb-4">Tạo tài liệu web</h3>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1.5">Tên trang web</label>
+                <input type="text" id="link-name-input" placeholder="Ví dụ: Tài liệu Figma..." class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--accent-blue)] transition-all">
+            </div>
+            <div class="mb-8">
+                <label class="block text-sm font-medium text-gray-700 mb-1.5">Đường dẫn (URL)</label>
+                <input type="url" id="link-url-input" placeholder="https://..." class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--accent-blue)] transition-all">
+            </div>
+            <div class="flex justify-end gap-3">
+                <button onclick="closeCreateLinkModal()" class="px-5 py-2.5 text-sm font-semibold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">Hủy</button>
+                <button onclick="saveLink()" class="px-5 py-2.5 bg-gray-900 text-white text-sm font-semibold rounded-xl hover:bg-gray-800 shadow-sm transition-colors">Lưu tài liệu</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* ======================== CHỨC NĂNG THÔNG BÁO (TOAST) ======================== */
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.className = 'fixed bottom-6 right-6 bg-gray-900 text-white px-6 py-3.5 rounded-xl shadow-2xl z-[100] transform transition-all duration-300 translate-y-10 opacity-0 font-medium text-sm flex items-center gap-3 border border-gray-700';
+            toast.innerHTML = `
+                <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                ${message}
+            `;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.remove('translate-y-10', 'opacity-0');
+            }, 10);
+            
+            setTimeout(() => {
+                toast.classList.add('translate-y-10', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        /* ======================== CHỨC NĂNG ĐIỀU HƯỚNG TABS ======================== */
+        function switchTab(tabId) {
+            // Đổi giao diện
+            document.getElementById('view-calendar').classList.add('hidden');
+            document.getElementById('view-notes').classList.add('hidden');
+            document.getElementById('view-documents').classList.add('hidden');
+            document.getElementById(`view-${tabId}`).classList.remove('hidden');
+
+            // Reset state của tab Ghi chú
+            if(tabId === 'notes') {
+                hideNoteEditor();
+                renderNotesList();
+            }
+
+            // Reset state của tab Tài liệu
+            if(tabId === 'documents') {
+                closeGroupDetails();
+                renderDocGroups();
+            }
+
+            // Đổi UI Navigation
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.className = "nav-item flex items-center gap-4 px-4 py-3.5 text-gray-400 hover:text-gray-800 hover:bg-gray-50 rounded-2xl transition-all font-medium";
+            });
+            
+            const activeNav = document.getElementById(`nav-${tabId}`);
+            if(activeNav) {
+                activeNav.className = "nav-item active flex items-center gap-4 px-4 py-3.5 bg-[var(--accent-blue)] text-white rounded-2xl shadow-[0_4px_15px_rgba(0,102,255,0.25)] transition-all font-semibold";
+            }
+        }
+
+        /* ======================== CHỨC NĂNG LỊCH HỌC ======================== */
+        const pastelThemes = [
+            { bg: 'bg-[#EFF6FF]', text: 'text-[#2563EB]', icon: 'text-[#60A5FA]' },
+            { bg: 'bg-[#FEF2F2]', text: 'text-[#DC2626]', icon: 'text-[#F87171]' },
+            { bg: 'bg-[#FAF5FF]', text: 'text-[#9333EA]', icon: 'text-[#C084FC]' },
+            { bg: 'bg-[#FFF7ED]', text: 'text-[#EA580C]', icon: 'text-[#FB923C]' },
+            { bg: 'bg-[#F0FDF4]', text: 'text-[#16A34A]', icon: 'text-[#4ADE80]' } 
+        ];
+
+        const getThemeForSubject = (str) => {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+            return pastelThemes[Math.abs(hash) % pastelThemes.length];
+        };
+
+        const schedules = [
+            { id: 1, subject: "Kiến trúc máy tính", room: "B201", teacher: "Vũ Trọng Chiến", day: "Thứ 2", time: "Tiết 1-2", session: "Sáng" },
+            { id: 2, subject: "Anh văn cơ sở 2", room: "B201", teacher: "Mai Văn Sao", day: "Thứ 2", time: "Tiết 3-5", session: "Sáng" },
+            { id: 3, subject: "Toán cao cấp 3", room: "B201", teacher: "Đoàn Thị Bích", day: "Thứ 3", time: "Tiết 2-4", session: "Chiều" },
+            { id: 4, subject: "Nhập môn Lập trình", room: "B201", teacher: "Đỗ Văn Tuyến", day: "Thứ 4", time: "Tiết 1-4", session: "Chiều" },
+            { id: 5, subject: "Chủ nghĩa xã hội KH", room: "B201", teacher: "Phạm Thị Oanh", day: "Thứ 5", time: "Tiết 1-3", session: "Chiều" },
+            { id: 6, subject: "Bảo vệ môi trường", room: "B201", teacher: "Nguyễn Thị Tươi", day: "Thứ 5", time: "Tiết 4-5", session: "Chiều" },
+            { id: 7, subject: "Anh văn cơ sở 2", room: "B201", teacher: "Mai Văn Sao", day: "Thứ 6", time: "Tiết 1-2", session: "Sáng" },
+            { id: 8, subject: "Lập trình Python", room: "B201", teacher: "Đỗ Văn Tuyến", day: "Thứ 6", time: "Tiết 3-5", session: "Sáng" }
+        ];
+
+        const daysOfWeek = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "Chủ Nhật"];
+        const today = new Date();
+        const currentDayIndex = today.getDay() === 0 ? 6 : today.getDay() - 1; 
+        const currentDayStr = daysOfWeek[currentDayIndex];
+        const weekDates = [];
+        const firstDayOfWeek = new Date(today);
+        firstDayOfWeek.setDate(today.getDate() - currentDayIndex);
+        
+        for (let i = 0; i < 7; i++) {
+            const d = new Date(firstDayOfWeek);
+            d.setDate(firstDayOfWeek.getDate() + i);
+            weekDates.push(d.getDate());
+        }
+
+        const renderSchedule = () => {
+            const board = document.getElementById('scheduleBoard');
+            const calendarHeader = document.getElementById('calendarHeader');
+            if(!board || !calendarHeader) return;
+            
+            board.innerHTML = ""; 
+            calendarHeader.innerHTML = "";
+
+            daysOfWeek.forEach((day, index) => {
+                const isToday = day === currentDayStr;
+                const dateNum = weekDates[index];
+                
+                let headerContent = `
+                    <div class="py-4 flex flex-col items-center justify-center relative dashed-column border-b-0">
+                        <span class="text-[13px] font-semibold uppercase ${isToday ? 'text-[var(--accent-blue)]' : 'text-gray-400'} mb-1.5">${day}</span>
+                        <div class="w-10 h-10 flex items-center justify-center rounded-2xl text-base font-bold transition-all ${isToday ? 'bg-[var(--accent-blue)] text-white shadow-[0_4px_15px_rgba(0,102,255,0.3)]' : 'text-gray-800 bg-transparent'}">
+                            ${dateNum}
+                        </div>
+                    </div>
+                `;
+                calendarHeader.innerHTML += headerContent;
+
+                let dayClasses = schedules.filter(s => s.day === day);
+                let morningClasses = dayClasses.filter(c => c.session === 'Sáng');
+                let afternoonClasses = dayClasses.filter(c => c.session === 'Chiều');
+                morningClasses.sort((a, b) => a.time.localeCompare(b.time));
+                afternoonClasses.sort((a, b) => a.time.localeCompare(b.time));
+
+                const dayColumn = document.createElement('div');
+                dayColumn.className = `dashed-column flex flex-col h-full ${isToday ? 'bg-blue-50/20' : ''}`;
+                
+                const renderCards = (classes) => {
+                    if (classes.length === 0) {
+                        return `<div class="mt-2 flex flex-col items-center justify-center h-20 border-2 border-dashed border-gray-200 rounded-2xl opacity-40 hover:opacity-100 transition-opacity"><span class="text-xs text-gray-400 font-medium">+ Thêm lịch</span></div>`;
+                    }
+                    let html = "";
+                    classes.forEach(item => {
+                        const theme = getThemeForSubject(item.subject);
+                        html += `
+                            <div class="schedule-card bg-white border border-[var(--border-soft)] rounded-[20px] p-3.5 cursor-pointer relative group shadow-sm hover-lift">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-10 h-10 mt-0.5 rounded-[12px] ${theme.bg} ${theme.text} flex items-center justify-center flex-shrink-0">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477-4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <h5 class="font-bold text-[13px] xl:text-[14px] text-gray-900 leading-snug mb-1.5">${item.subject}</h5>
+                                        <div class="flex flex-col gap-1.5">
+                                            <div class="flex items-center gap-1.5 text-[11px] xl:text-[12px] text-gray-500 font-medium truncate">
+                                                <svg class="w-3.5 h-3.5 ${theme.icon}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                                                <span class="truncate" title="${item.teacher}">${item.teacher}</span>
+                                            </div>
+                                            <div class="flex items-center gap-1.5 text-[11px] xl:text-[12px] text-gray-400 font-medium truncate">
+                                                <svg class="w-3.5 h-3.5 ${theme.icon}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                                <span>${item.time}</span>
+                                                <span class="w-1 h-1 rounded-full bg-gray-300 mx-0.5"></span>
+                                                <span class="truncate">P. ${item.room}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    return html;
+                };
+
+                dayColumn.innerHTML = `
+                    <div class="flex-1 p-2 md:p-3 flex flex-col gap-3 border-b border-dashed border-[var(--border-soft)]">
+                        ${renderCards(morningClasses)}
+                    </div>
+                    <div class="flex-1 p-2 md:p-3 flex flex-col gap-3">
+                        ${renderCards(afternoonClasses)}
+                    </div>
+                `;
+                board.appendChild(dayColumn);
+            });
+        };
+        // Khởi tạo Lịch học ngay khi tải trang
+        renderSchedule();
+
+        /* ======================== CHỨC NĂNG GHI CHÚ (MARKDOWN) ======================== */
+        let notesData = [];
+        let currentEditingNoteId = null;
+
+        function renderNotesList() {
+            const grid = document.getElementById('notes-grid');
+            if(!grid) return;
+            grid.innerHTML = "";
+
+            if (notesData.length === 0) {
+                grid.innerHTML = `<div class="col-span-full text-center py-10 text-gray-400">Chưa có ghi chú nào. Hãy tạo một ghi chú mới!</div>`;
+                return;
+            }
+
+            notesData.forEach(note => {
+                const parsedContent = marked.parse(note.content);
+                grid.innerHTML += `
+                    <div onclick="editNote(${note.id})" class="bg-white border border-[var(--border-soft)] p-5 rounded-[20px] shadow-sm hover-lift flex flex-col h-64 overflow-hidden relative cursor-pointer">
+                        <div class="flex justify-between items-start mb-3">
+                            <h3 class="font-bold text-gray-900 text-lg truncate pr-4">${note.title}</h3>
+                            <span class="text-xs font-medium text-gray-400 bg-gray-50 px-2 py-1 rounded-md">${note.date}</span>
+                        </div>
+                        <div class="prose prose-sm text-gray-600 text-sm flex-1 overflow-hidden relative">
+                            ${parsedContent}
+                            <div class="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-white to-transparent"></div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function showNoteEditor() {
+            document.getElementById('notes-list-area').classList.add('hidden');
+            document.getElementById('note-editor-area').classList.remove('hidden');
+            document.getElementById('note-editor-area').classList.add('flex');
+            currentEditingNoteId = null;
+            document.getElementById('note-title-input').value = "";
+            document.getElementById('note-content-input').value = "";
+            document.getElementById('note-title-input').focus();
+        }
+
+        function editNote(id) {
+            const note = notesData.find(n => n.id === id);
+            if (!note) return;
+            currentEditingNoteId = id; 
+            document.getElementById('note-title-input').value = note.title;
+            document.getElementById('note-content-input').value = note.content;
+            document.getElementById('notes-list-area').classList.add('hidden');
+            document.getElementById('note-editor-area').classList.remove('hidden');
+            document.getElementById('note-editor-area').classList.add('flex');
+            document.getElementById('note-content-input').focus();
+        }
+
+        function hideNoteEditor() {
+            document.getElementById('notes-list-area').classList.remove('hidden');
+            document.getElementById('note-editor-area').classList.add('hidden');
+            document.getElementById('note-editor-area').classList.remove('flex');
+        }
+
+        function saveNote() {
+            const title = document.getElementById('note-title-input').value.trim() || "Ghi chú không tên";
+            const content = document.getElementById('note-content-input').value.trim();
+
+            if (!content) return;
+
+            const today = new Date();
+            const dateString = `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`;
+
+            if (currentEditingNoteId !== null) {
+                const noteIndex = notesData.findIndex(n => n.id === currentEditingNoteId);
+                if (noteIndex !== -1) {
+                    notesData[noteIndex].title = title;
+                    notesData[noteIndex].content = content;
+                    notesData[noteIndex].date = dateString; 
+                }
+            } else {
+                notesData.unshift({
+                    id: Date.now(),
+                    title: title,
+                    content: content,
+                    date: dateString
+                });
+            }
+
+            hideNoteEditor();
+            renderNotesList();
+            showToast("Đã lưu ghi chú thành công!");
+        }
+
+        function insertMarkdown(type) {
+            const textarea = document.getElementById('note-content-input');
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const text = textarea.value;
+            const selectedText = text.substring(start, end);
+            let insertion = '';
+            let cursorOffset = 0; 
+            
+            switch(type) {
+                case 'bold': insertion = `**${selectedText || 'chữ đậm'}**`; cursorOffset = selectedText ? insertion.length : 2; break;
+                case 'italic': insertion = `*${selectedText || 'chữ nghiêng'}*`; cursorOffset = selectedText ? insertion.length : 1; break;
+                case 'h1': insertion = `\n# ${selectedText || 'Tiêu đề lớn'}\n`; cursorOffset = selectedText ? insertion.length - 1 : 3; break;
+                case 'h2': insertion = `\n## ${selectedText || 'Tiêu đề phụ'}\n`; cursorOffset = selectedText ? insertion.length - 1 : 4; break;
+                case 'h3': insertion = `\n### ${selectedText || 'Tiêu đề nhỏ'}\n`; cursorOffset = selectedText ? insertion.length - 1 : 5; break;
+                case 'quote': insertion = `\n> ${selectedText || 'Khối trích dẫn'}\n`; cursorOffset = selectedText ? insertion.length - 1 : 3; break;
+                case 'link': insertion = `[${selectedText || 'Văn bản hiển thị'}](https://)`; cursorOffset = selectedText ? insertion.length - 1 : 1; break;
+                case 'image': insertion = `![${selectedText || 'Mô tả ảnh'}](https://link-anh.com/anh.jpg)`; cursorOffset = selectedText ? insertion.length - 1 : 2; break;
+                case 'list': insertion = `\n- ${selectedText || 'Mục danh sách'}\n`; cursorOffset = selectedText ? insertion.length - 1 : 3; break;
+            }
+            
+            textarea.value = text.substring(0, start) + insertion + text.substring(end);
+            textarea.focus();
+            if(!selectedText) {
+                textarea.selectionEnd = start + cursorOffset;
+            }
+        }
+
+        /* ======================== CHỨC NĂNG XUẤT/NHẬP ZIP GHI CHÚ ======================== */
+        async function exportNotesToZip() {
+            if (notesData.length === 0) {
+                alert("Bạn chưa có ghi chú nào để xuất!");
+                return;
+            }
+            
+            const zip = new JSZip();
+            
+            // File hệ thống lưu trữ toàn vẹn dữ liệu gốc để khôi phục
+            zip.file("notes_data.json", JSON.stringify(notesData, null, 2));
+            
+            // Folder chứa các file .md để người dùng có thể đọc bằng các phần mềm khác
+            const mdFolder = zip.folder("Markdown_Files");
+            notesData.forEach(note => {
+                let safeTitle = note.title.replace(/[^a-z0-9A-Z_À-ỹ]/g, '_');
+                mdFolder.file(`${safeTitle}_${note.id}.md`, note.content);
+            });
+
+            try {
+                const content = await zip.generateAsync({type:"blob"});
+                const url = window.URL.createObjectURL(content);
+                const a = document.createElement("a");
+                a.style.display = "none";
+                a.href = url;
+                a.download = "Niyaki_Notes_Backup.zip";
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+                showToast("Đã xuất toàn bộ ghi chú thành file Zip!");
+            } catch (err) {
+                console.error(err);
+                alert("Đã xảy ra lỗi khi tạo file Zip.");
+            }
+        }
+
+        async function importNotesFromZip(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            try {
+                const zip = new JSZip();
+                const zipContent = await zip.loadAsync(file);
+                
+                if (zipContent.file("notes_data.json")) {
+                    const jsonData = await zipContent.file("notes_data.json").async("string");
+                    const importedNotes = JSON.parse(jsonData);
+                    
+                    if (Array.isArray(importedNotes)) {
+                        importedNotes.forEach(note => {
+                            // Tạo ID mới để tránh trùng lặp dữ liệu cũ
+                            note.id = Date.now() + Math.floor(Math.random() * 1000);
+                            notesData.unshift(note);
+                        });
+                        renderNotesList();
+                        showToast(`Đã khôi phục ${importedNotes.length} ghi chú từ file Zip!`);
+                    }
+                } else {
+                    alert("File Zip không đúng định dạng. Cần có file notes_data.json bên trong!");
+                }
+            } catch (error) {
+                console.error(error);
+                alert("Có lỗi xảy ra khi đọc file Zip!");
+            }
+            
+            // Reset input file để có thể import lại cùng 1 file nếu muốn
+            event.target.value = "";
+        }
+
+        /* ======================== CHỨC NĂNG TÀI LIỆU (CHROME TABS STYLE) ======================== */
+        let docGroups = [];
+        let selectedColor = 'blue';
+        let currentOpenGroupId = null;
+
+        const colorMap = {
+            'blue': 'bg-blue-500 text-blue-500 ring-blue-500 border-blue-200 bg-blue-50',
+            'purple': 'bg-purple-500 text-purple-500 ring-purple-500 border-purple-200 bg-purple-50',
+            'pink': 'bg-pink-500 text-pink-500 ring-pink-500 border-pink-200 bg-pink-50',
+            'orange': 'bg-orange-500 text-orange-500 ring-orange-500 border-orange-200 bg-orange-50',
+            'green': 'bg-green-500 text-green-500 ring-green-500 border-green-200 bg-green-50'
+        };
+
+        function renderDocGroups() {
+            const grid = document.getElementById('doc-groups-grid');
+            if(!grid) return;
+            grid.innerHTML = "";
+
+            if (docGroups.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full flex flex-col items-center justify-center py-16">
+                        <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4 text-gray-400">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z"></path></svg>
+                        </div>
+                        <p class="text-gray-500 font-medium">Bạn chưa có tài liệu nào.</p>
+                        <p class="text-sm text-gray-400 mt-1">Vui lòng tạo tài liệu để quản lý các liên kết.</p>
+                    </div>`;
+                return;
+            }
+
+            docGroups.forEach(group => {
+                const colorClasses = colorMap[group.color].split(' ');
+                const bgMain = colorClasses[0]; 
+                const bgSoft = colorClasses[4];
+                const borderSoft = colorClasses[3];
+                const textCol = colorClasses[1];
+
+                grid.innerHTML += `
+                    <div onclick="openGroupDetails(${group.id})" class="bg-white border border-[var(--border-soft)] rounded-[20px] p-5 shadow-sm hover-lift cursor-pointer relative overflow-hidden flex flex-col h-36">
+                        <div class="absolute top-0 left-0 right-0 h-1.5 ${bgMain}"></div>
+                        <div class="flex items-start gap-4 mt-2">
+                            <div class="w-12 h-12 rounded-[14px] ${bgSoft} ${textCol} flex items-center justify-center flex-shrink-0 border ${borderSoft}">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
+                            </div>
+                            <div class="flex-1 min-w-0 pt-1">
+                                <h3 class="font-bold text-gray-900 text-base truncate">${group.name}</h3>
+                                <p class="text-xs text-gray-500 mt-1.5 font-medium">${group.links.length} tài liệu web</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function openCreateGroupModal() {
+            document.getElementById('modal-group').classList.remove('hidden');
+            document.getElementById('modal-group').classList.add('flex');
+            document.getElementById('group-name-input').value = "";
+            const firstColorBtn = document.querySelector('.color-btn');
+            if(firstColorBtn) selectColor('blue', firstColorBtn);
+            setTimeout(() => document.getElementById('group-name-input').focus(), 50);
+        }
+
+        function closeCreateGroupModal() {
+            document.getElementById('modal-group').classList.add('hidden');
+            document.getElementById('modal-group').classList.remove('flex');
+        }
+
+        function selectColor(color, btnElement) {
+            selectedColor = color;
+            document.querySelectorAll('.color-btn').forEach(btn => {
+                btn.classList.remove('ring-2');
+                btn.classList.add('ring-0');
+            });
+            btnElement.classList.remove('ring-0');
+            btnElement.classList.add('ring-2');
+        }
+
+        function saveGroup() {
+            const name = document.getElementById('group-name-input').value.trim();
+            if (!name) return;
+
+            docGroups.push({
+                id: Date.now(),
+                name: name,
+                color: selectedColor,
+                links: []
+            });
+
+            closeCreateGroupModal();
+            renderDocGroups();
+            showToast("Tạo thư mục tài liệu thành công!");
+        }
+
+        function openGroupDetails(id) {
+            const group = docGroups.find(g => g.id === id);
+            if (!group) return;
+
+            currentOpenGroupId = id;
+
+            document.getElementById('current-group-title').innerHTML = `
+                <span class="w-3 h-3 rounded-full inline-block ${colorMap[group.color].split(' ')[0]}"></span>
+                ${group.name}
+            `;
+
+            document.getElementById('doc-groups-area').classList.add('hidden');
+            document.getElementById('single-group-area').classList.remove('hidden');
+            document.getElementById('single-group-area').classList.add('flex');
+            document.getElementById('btn-create-doc-group').classList.add('hidden');
+
+            renderLinks();
+        }
+
+        function closeGroupDetails() {
+            currentOpenGroupId = null;
+            document.getElementById('doc-groups-area').classList.remove('hidden');
+            document.getElementById('single-group-area').classList.add('hidden');
+            document.getElementById('single-group-area').classList.remove('flex');
+            document.getElementById('btn-create-doc-group').classList.remove('hidden');
+            
+            renderDocGroups();
+        }
+
+        function renderLinks() {
+            const group = docGroups.find(g => g.id === currentOpenGroupId);
+            const container = document.getElementById('links-list-container');
+            container.innerHTML = "";
+
+            if (group.links.length === 0) {
+                container.innerHTML = `<div class="text-center py-10 text-gray-400 font-medium">Bạn chưa có tài liệu web nào. Hãy tạo mới!</div>`;
+                return;
+            }
+
+            group.links.forEach(link => {
+                container.innerHTML += `
+                    <a href="${link.url}" target="_blank" class="bg-white border border-[var(--border-soft)] p-4 rounded-2xl shadow-sm hover:shadow-md transition-all flex items-center justify-between group cursor-pointer">
+                        <div class="flex items-center gap-4 min-w-0">
+                            <div class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center flex-shrink-0 text-gray-400 group-hover:bg-blue-50 group-hover:text-blue-500 transition-colors">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+                            </div>
+                            <div class="min-w-0">
+                                <h4 class="font-bold text-gray-900 text-sm truncate">${link.name}</h4>
+                                <p class="text-xs text-gray-400 truncate mt-0.5">${link.url}</p>
+                            </div>
+                        </div>
+                        <div class="text-gray-300 group-hover:text-blue-500 transition-colors pr-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                        </div>
+                    </a>
+                `;
+            });
+        }
+
+        function openCreateLinkModal() {
+            document.getElementById('modal-link').classList.remove('hidden');
+            document.getElementById('modal-link').classList.add('flex');
+            document.getElementById('link-name-input').value = "";
+            document.getElementById('link-url-input').value = "";
+            setTimeout(() => document.getElementById('link-name-input').focus(), 50);
+        }
+
+        function closeCreateLinkModal() {
+            document.getElementById('modal-link').classList.add('hidden');
+            document.getElementById('modal-link').classList.remove('flex');
+        }
+
+        function saveLink() {
+            const name = document.getElementById('link-name-input').value.trim();
+            const url = document.getElementById('link-url-input').value.trim();
+
+            if (!name || !url) return;
+
+            let formattedUrl = url;
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                formattedUrl = 'https://' + url;
+            }
+
+            const group = docGroups.find(g => g.id === currentOpenGroupId);
+            if (group) {
+                group.links.push({
+                    id: Date.now(),
+                    name: name,
+                    url: formattedUrl
+                });
+            }
+
+            closeCreateLinkModal();
+            renderLinks();
+            showToast("Thêm liên kết tài liệu thành công!");
+        }
+
+        /* ======================== CHỨC NĂNG XUẤT/NHẬP ZIP TÀI LIỆU ======================== */
+        async function exportDocsToZip() {
+            if (docGroups.length === 0) {
+                alert("Bạn chưa có tài liệu nào để xuất!");
+                return;
+            }
+            
+            const zip = new JSZip();
+            
+            // File hệ thống lưu trữ toàn vẹn dữ liệu gốc để khôi phục
+            zip.file("documents_data.json", JSON.stringify(docGroups, null, 2));
+
+            try {
+                const content = await zip.generateAsync({type:"blob"});
+                const url = window.URL.createObjectURL(content);
+                const a = document.createElement("a");
+                a.style.display = "none";
+                a.href = url;
+                a.download = "Niyaki_Documents_Backup.zip";
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+                showToast("Đã xuất toàn bộ tài liệu thành file Zip!");
+            } catch (err) {
+                console.error(err);
+                alert("Đã xảy ra lỗi khi tạo file Zip.");
+            }
+        }
+
+        async function importDocsFromZip(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            try {
+                const zip = new JSZip();
+                const zipContent = await zip.loadAsync(file);
+                
+                if (zipContent.file("documents_data.json")) {
+                    const jsonData = await zipContent.file("documents_data.json").async("string");
+                    const importedDocs = JSON.parse(jsonData);
+                    
+                    if (Array.isArray(importedDocs)) {
+                        importedDocs.forEach(group => {
+                            // Tạo ID mới để tránh trùng lặp
+                            group.id = Date.now() + Math.floor(Math.random() * 1000);
+                            
+                            // Cũng làm mới ID cho các link bên trong
+                            if(group.links && Array.isArray(group.links)) {
+                                group.links.forEach(link => {
+                                    link.id = Date.now() + Math.floor(Math.random() * 1000);
+                                });
+                            } else {
+                                group.links = [];
+                            }
+                            
+                            docGroups.push(group);
+                        });
+                        renderDocGroups();
+                        showToast(`Đã khôi phục ${importedDocs.length} thư mục từ file Zip!`);
+                    }
+                } else {
+                    alert("File Zip không đúng định dạng. Cần có file documents_data.json bên trong!");
+                }
+            } catch (error) {
+                console.error(error);
+                alert("Có lỗi xảy ra khi đọc file Zip!");
+            }
+            
+            // Reset input file
+            event.target.value = "";
+        }
+
+    </script>
+</body>
+</html>
