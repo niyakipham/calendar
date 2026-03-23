@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -5,543 +6,579 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Niyaki Pham Calender</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Thêm thư viện Marked.js để render Markdown sang HTML -->
+    <!-- Thư viện Marked.js để render Markdown -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <!-- Thêm thư viện JSZip để xử lý nén/giải nén file zip -->
+    <!-- Thư viện JSZip để nén/giải nén file -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Bảng màu mang hơi thở "Clean & Soft" */
+        /* Bảng màu và thiết lập dành cho Glassmorphism */
         :root {
-            --bg-viewport: #F0F2F6; /* Nền xám khói rất nhẹ nhàng */
-            --bg-card-main: #FFFFFF; /* Trắng tinh khôi cho toàn bộ App */
-            --bg-content-area: #F8F9FB; /* Nền xám sữa cho khu vực lịch để làm nổi bật thẻ trắng */
-            --text-primary: #111827;
-            --text-secondary: #6B7280;
-            --accent-blue: #0066FF; /* Màu xanh rực rỡ lấy từ nút Upload */
-            --accent-blue-hover: #005ce6;
-            --border-soft: #F1F3F5;
+            --text-primary: #1E293B; /* Slate 800 - Rõ ràng trên nền kính */
+            --text-secondary: #64748B; /* Slate 500 */
+            --accent-blue: #3B82F6; 
         }
 
         body {
             font-family: 'Inter', sans-serif;
-            background-color: var(--bg-viewport);
             color: var(--text-primary);
             margin: 0;
             overflow: hidden;
+            background-color: #E2E8F0;
         }
 
-        /* Thanh cuộn mềm mại tựa đám mây */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #E5E7EB; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #D1D5DB; }
+        /* 🌊 Lớp nền Gradient chuyển động mềm mại tạo chiều sâu cho kính mờ (Đã chuyển sang tone Xanh dịu mát) */
+        .mesh-background {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: -1;
+            background: linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%);
+            overflow: hidden;
+        }
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.6;
+            animation: float 20s infinite ease-in-out alternate;
+        }
+        /* Hân đổi các dải màu hồng/vàng cũ sang các sắc Xanh tinh tế */
+        .blob-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: #93C5FD; } /* Xanh dương mềm mại */
+        .blob-2 { top: 40%; right: -10%; width: 45vw; height: 45vw; background: #A7F3D0; animation-delay: -5s; } /* Xanh ngọc lục bảo nhạt */
+        .blob-3 { bottom: -20%; left: 20%; width: 60vw; height: 60vw; background: #C4B5FD; animation-delay: -10s; } /* Xanh tím pastel */
 
-        /* Hiệu ứng bay bổng cho thẻ */
-        .hover-lift {
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(5%, 10%) scale(1.05); }
+            100% { transform: translate(-5%, -5%) scale(0.95); }
+        }
+
+        /* ✨ Lớp Class Thần Thánh: Tấm kính mờ (Glass Panel) */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.45);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+        }
+
+        .glass-sidebar {
+            background: rgba(255, 255, 255, 0.3);
+            border-right: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 4px 16px 0 rgba(31, 38, 135, 0.05);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 20px -10px rgba(0, 0, 0, 0.05);
         }
-        .hover-lift:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.1);
-            border-color: transparent;
+        .glass-card:hover {
+            background: rgba(255, 255, 255, 0.7);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 25px 0 rgba(31, 38, 135, 0.1);
+            border: 1px solid rgba(255, 255, 255, 1);
             z-index: 10;
         }
 
-        /* Viền đứt khúc nghệ thuật */
-        .dashed-column {
-            background-image: linear-gradient(to bottom, transparent 50%, var(--border-soft) 50%);
-            background-size: 1px 20px;
+        /* Thanh cuộn kính mờ */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.15); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(0, 0, 0, 0.25); }
+
+        /* Viền đứt khúc sắc nét trên kính */
+        .dashed-border-y {
+            background-image: linear-gradient(to bottom, transparent 50%, rgba(255,255,255,0.8) 50%);
+            background-size: 1px 16px;
             background-repeat: repeat-y;
             background-position: right;
         }
-        .dashed-column:last-child {
-            background-image: none;
-        }
 
-        /* Style cơ bản cho nội dung Markdown hiển thị */
-        .prose h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; }
-        .prose h2 { font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; }
-        .prose h3 { font-size: 1.125rem; font-weight: 600; margin-bottom: 0.5rem; }
-        .prose p { margin-bottom: 0.5rem; }
+        /* Markdown Rendering Styles */
+        .prose h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-primary); }
+        .prose h2 { font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-primary); }
+        .prose h3 { font-size: 1.125rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-primary); }
+        .prose p, .prose li { color: var(--text-secondary); margin-bottom: 0.5rem; line-height: 1.6; }
+        .prose strong { color: #0F172A; }
         .prose a { color: var(--accent-blue); text-decoration: underline; }
-        .prose blockquote { border-left: 3px solid var(--accent-blue); padding-left: 1rem; color: var(--text-secondary); font-style: italic; }
-        .prose img { max-width: 100%; border-radius: 0.5rem; margin-top: 0.5rem; }
-        .prose ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 0.5rem; }
+        .prose blockquote { border-left: 3px solid var(--accent-blue); padding-left: 1rem; color: #475569; font-style: italic; background: rgba(255,255,255,0.4); padding: 0.5rem 1rem; border-radius: 0 8px 8px 0; }
+        .prose ul { list-style-type: disc; padding-left: 1.5rem; }
     </style>
 </head>
-<body class="h-screen w-full p-4 md:p-8 flex items-center justify-center">
+<body class="h-screen w-full p-4 md:p-6 lg:p-8 flex items-center justify-center relative">
 
-    <!-- Khối Wrapper Chính -->
-    <div class="w-full h-full max-w-[1600px] bg-[var(--bg-card-main)] rounded-[2.5rem] shadow-[0_8px_40px_rgba(0,0,0,0.04)] flex overflow-hidden border border-white">
+    <!-- Lớp nền Đốm màu mờ ảo cho Glassmorphism -->
+    <div class="mesh-background">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <!-- CẤU TRÚC LAYOUT CHỐNG BIẾN DẠNG + GLASS PANEL -->
+    <div class="w-full h-full max-w-[1600px] glass-panel rounded-[2rem] flex overflow-hidden relative z-10">
         
-        <!-- Sidebar -->
-        <aside class="w-72 bg-white flex flex-col z-20 flex-shrink-0">
-            <!-- Logo Area -->
-            <div class="p-8 flex items-center gap-3">
-                <div class="w-10 h-10 rounded-2xl bg-[var(--accent-blue)] flex items-center justify-center shadow-[0_4px_15px_rgba(0,102,255,0.3)]">
-                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477-4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+        <!-- ==================== SIDEBAR (KÍNH MỜ) ==================== -->
+        <aside class="w-64 lg:w-72 flex flex-col z-20 flex-shrink-0 glass-sidebar">
+            <!-- Logo -->
+            <div class="p-6 lg:p-8 flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-white/60 border border-white/80 flex items-center justify-center shadow-sm backdrop-blur-md">
+                    <svg class="w-6 h-6 text-blue-600 drop-shadow-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477-4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
                 </div>
-                <h1 class="font-bold text-2xl tracking-tight text-gray-900">Niyaki Pham</h1>
+                <h1 class="font-bold text-xl lg:text-2xl tracking-tight text-slate-800">Niyaki</h1>
             </div>
 
-            <!-- Navigation Links -->
-            <nav class="flex-1 px-6 py-2 space-y-2">
-                <a href="#" id="nav-calendar" onclick="switchTab('calendar')" class="nav-item active flex items-center gap-4 px-4 py-3.5 bg-[var(--accent-blue)] text-white rounded-2xl shadow-[0_4px_15px_rgba(0,102,255,0.25)] transition-all font-semibold">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                    <span>Lịch học</span>
+            <!-- Tabs Điều Hướng -->
+            <nav class="flex-1 px-4 lg:px-6 py-2 space-y-2">
+                <a href="#" id="nav-calendar" onclick="switchTab('calendar')" class="nav-item active flex items-center gap-4 px-4 py-3.5 bg-white/70 text-blue-600 rounded-2xl border border-white shadow-sm transition-all font-bold backdrop-blur-md">
+                    <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    <span>Thời khóa biểu</span>
                 </a>
-                <a href="#" id="nav-notes" onclick="switchTab('notes')" class="nav-item flex items-center gap-4 px-4 py-3.5 text-gray-400 hover:text-gray-800 hover:bg-gray-50 rounded-2xl transition-all font-medium">
+                <a href="#" id="nav-notes" onclick="switchTab('notes')" class="nav-item flex items-center gap-4 px-4 py-3.5 text-slate-600 hover:text-slate-900 hover:bg-white/40 rounded-2xl transition-all font-semibold border border-transparent">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                    <span>Ghi chú</span>
+                    <span>Nhật ký & Ghi chú</span>
                 </a>
-                <a href="#" id="nav-documents" onclick="switchTab('documents')" class="nav-item flex items-center gap-4 px-4 py-3.5 text-gray-400 hover:text-gray-800 hover:bg-gray-50 rounded-2xl transition-all font-medium">
+                <a href="#" id="nav-documents" onclick="switchTab('documents')" class="nav-item flex items-center gap-4 px-4 py-3.5 text-slate-600 hover:text-slate-900 hover:bg-white/40 rounded-2xl transition-all font-semibold border border-transparent">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
-                    <span>Tài liệu</span>
+                    <span>Quản lý Tài liệu</span>
                 </a>
             </nav>
-            
-            <div class="p-6 mb-2"></div>
+            <div class="p-6"></div>
         </aside>
 
-        <!-- Main Content Area -->
-        <main class="flex-1 p-4 md:py-6 md:pr-6 h-full">
-            <div class="bg-[var(--bg-content-area)] rounded-[2rem] h-full w-full flex flex-col overflow-hidden relative border border-[var(--border-soft)] shadow-inner">
-                
-                <!-- ==================== VIEW: LỊCH HỌC ==================== -->
-                <div id="view-calendar" class="flex flex-col h-full w-full transition-opacity duration-300">
-                    <header class="h-[88px] flex-shrink-0 flex items-center justify-between px-8 z-10 border-b border-[var(--border-soft)] bg-white/50 backdrop-blur-sm">
-                        <div>
-                            <h2 class="text-2xl font-bold text-gray-900">Lịch trình tuần này</h2>
-                            <p class="text-sm text-gray-500 font-medium mt-1">Sắp xếp những ý tưởng rực rỡ 🌿</p>
-                        </div>
-                        <button class="w-12 h-12 rounded-full bg-white shadow-[0_4px_15px_rgba(0,0,0,0.05)] border border-gray-100 flex items-center justify-center text-gray-800 hover:scale-105 transition-transform">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                        </button>
-                    </header>
-
-                    <div class="flex-1 overflow-auto p-2 md:p-4">
-                        <div class="min-w-[1100px] h-full flex flex-col bg-white rounded-3xl border border-[var(--border-soft)] shadow-[0_2px_10px_rgba(0,0,0,0.02)] overflow-hidden">
-                            <div class="flex flex-shrink-0 border-b border-[var(--border-soft)]">
-                                <div class="w-16 md:w-20 flex-shrink-0 border-r border-[var(--border-soft)]"></div>
-                                <div id="calendarHeader" class="flex-1 grid grid-cols-7"></div>
-                            </div>
-                            <div class="flex-1 flex">
-                                <div class="w-16 md:w-20 flex-shrink-0 flex flex-col border-r border-[var(--border-soft)] bg-gray-50/30">
-                                    <div class="flex-1 flex items-center justify-center border-b border-dashed border-[var(--border-soft)] relative">
-                                        <div class="absolute inset-0 flex items-center justify-center">
-                                            <span class="-rotate-90 font-bold text-amber-500 bg-amber-50 px-5 py-2 rounded-xl text-xs uppercase tracking-widest shadow-sm border border-amber-100/50 whitespace-nowrap">☀️ Sáng</span>
-                                        </div>
-                                    </div>
-                                    <div class="flex-1 flex items-center justify-center relative">
-                                        <div class="absolute inset-0 flex items-center justify-center">
-                                            <span class="-rotate-90 font-bold text-indigo-500 bg-indigo-50 px-5 py-2 rounded-xl text-xs uppercase tracking-widest shadow-sm border border-indigo-100/50 whitespace-nowrap">🌆 Chiều</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div id="scheduleBoard" class="flex-1 grid grid-cols-7"></div>
-                            </div>
-                        </div>
+        <!-- ==================== MAIN WORKSPACE ==================== -->
+        <!-- Khu vực làm việc trong suốt nhẹ -->
+        <main class="flex-1 flex flex-col min-w-0 bg-white/10 relative">
+            
+            <!-- VIEW 1: LỊCH HỌC -->
+            <div id="view-calendar" class="flex flex-col h-full w-full">
+                <!-- Header View Kính -->
+                <header class="h-[80px] flex-shrink-0 flex items-center justify-between px-6 lg:px-8 border-b border-white/50 bg-white/20 backdrop-blur-xl z-10">
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-800 tracking-tight">Thời khóa biểu</h2>
+                        <p class="text-sm text-slate-500 font-medium">Lịch trình tuần này</p>
                     </div>
-                </div>
+                </header>
 
-                <!-- ==================== VIEW: GHI CHÚ ==================== -->
-                <div id="view-notes" class="flex flex-col h-full w-full hidden transition-opacity duration-300">
-                    
-                    <!-- Header Ghi chú -->
-                    <header class="h-[88px] flex-shrink-0 flex items-center justify-between px-8 z-10 border-b border-[var(--border-soft)] bg-white/50 backdrop-blur-sm">
-                        <div>
-                            <h2 class="text-2xl font-bold text-gray-900">Ghi chú của tôi</h2>
-                            <p class="text-sm text-gray-500 font-medium mt-1">Lưu giữ mọi suy nghĩ và ý tưởng ✍️</p>
-                        </div>
-                        <div class="flex items-center gap-3">
-                            <!-- Input ẩn để nhận file zip -->
-                            <input type="file" id="import-zip-input" accept=".zip" class="hidden" onchange="importNotesFromZip(event)">
-                            
-                            <button onclick="document.getElementById('import-zip-input').click()" class="hidden lg:flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all font-semibold text-sm shadow-sm" title="Nhập dữ liệu">
-                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                                Nhập Zip
-                            </button>
-                            
-                            <button onclick="exportNotesToZip()" class="hidden lg:flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all font-semibold text-sm shadow-sm" title="Xuất dữ liệu">
-                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                                Xuất Zip
-                            </button>
-
-                            <div class="w-px h-6 bg-gray-200 hidden lg:block mx-1"></div>
-
-                            <button onclick="showNoteEditor()" class="flex items-center gap-2 px-5 py-2.5 bg-[var(--accent-blue)] text-white rounded-xl shadow-[0_4px_15px_rgba(0,102,255,0.25)] hover:bg-[var(--accent-blue-hover)] transition-all font-semibold text-sm">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                                Tạo ghi chú
-                            </button>
-                        </div>
-                    </header>
-
-                    <!-- Vùng Danh sách Ghi chú -->
-                    <div id="notes-list-area" class="flex-1 overflow-auto p-6 relative">
-                        <div id="notes-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            <!-- JS sẽ render thẻ ghi chú vào đây -->
-                        </div>
-                    </div>
-
-                    <!-- Vùng Trình soạn thảo Markdown (Ẩn mặc định) -->
-                    <div id="note-editor-area" class="flex-1 hidden flex-col bg-white overflow-hidden rounded-b-[2rem]">
+                <div class="flex-1 overflow-auto p-6 relative">
+                    <!-- Khối bảng lịch Thủy Tinh (Bao bọc bởi min-w để không bị ép nhỏ) -->
+                    <div class="min-w-[1000px] h-full flex flex-col glass-panel rounded-3xl overflow-hidden shadow-sm">
                         
-                        <!-- Toolbar Markdown -->
-                        <div class="flex-shrink-0 border-b border-[var(--border-soft)] bg-gray-50/50 p-3 px-6 flex items-center gap-2 overflow-x-auto">
-                            <button onclick="insertMarkdown('bold')" title="Chữ đậm" class="w-9 h-9 flex items-center justify-center rounded-lg text-gray-600 hover:bg-gray-200 hover:text-gray-900 transition-colors">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 4h8a4 4 0 014 4 4 4 0 01-4 4H6z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 12h9a4 4 0 014 4 4 4 0 01-4 4H6z"></path></svg>
-                            </button>
-                            <button onclick="insertMarkdown('italic')" title="Chữ nghiêng" class="w-9 h-9 flex items-center justify-center rounded-lg text-gray-600 hover:bg-gray-200 hover:text-gray-900 transition-colors">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
-                            </button>
-                            <div class="w-px h-5 bg-gray-300 mx-1"></div>
-                            <button onclick="insertMarkdown('h1')" title="Tiêu đề 1" class="w-9 h-9 flex items-center justify-center rounded-lg text-gray-600 hover:bg-gray-200 hover:text-gray-900 font-bold text-sm transition-colors">H1</button>
-                            <button onclick="insertMarkdown('h2')" title="Tiêu đề 2" class="w-9 h-9 flex items-center justify-center rounded-lg text-gray-600 hover:bg-gray-200 hover:text-gray-900 font-bold text-sm transition-colors">H2</button>
-                            <button onclick="insertMarkdown('h3')" title="Tiêu đề 3" class="w-9 h-9 flex items-center justify-center rounded-lg text-gray-600 hover:bg-gray-200 hover:text-gray-900 font-bold text-sm transition-colors">H3</button>
-                            <div class="w-px h-5 bg-gray-300 mx-1"></div>
-                            <button onclick="insertMarkdown('quote')" title="Trích dẫn" class="w-9 h-9 flex items-center justify-center rounded-lg text-gray-600 hover:bg-gray-200 hover:text-gray-900 transition-colors">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
-                            </button>
-                            <button onclick="insertMarkdown('link')" title="Chèn Link" class="w-9 h-9 flex items-center justify-center rounded-lg text-gray-600 hover:bg-gray-200 hover:text-gray-900 transition-colors">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
-                            </button>
-                            <button onclick="insertMarkdown('image')" title="Chèn Ảnh" class="w-9 h-9 flex items-center justify-center rounded-lg text-gray-600 hover:bg-gray-200 hover:text-gray-900 transition-colors">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                            </button>
-                            <button onclick="insertMarkdown('list')" title="Danh sách" class="w-9 h-9 flex items-center justify-center rounded-lg text-gray-600 hover:bg-gray-200 hover:text-gray-900 transition-colors">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
-                            </button>
-                            
-                            <div class="flex-1"></div>
-                            
-                            <!-- Cụm nút hành động -->
-                            <button onclick="hideNoteEditor()" class="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-800 transition-colors">Hủy</button>
-                            <button onclick="saveNote()" class="px-6 py-2 bg-[var(--accent-blue)] text-white text-sm font-semibold rounded-lg shadow hover:bg-[var(--accent-blue-hover)] transition-colors">Lưu ghi chú</button>
+                        <!-- Header Các Ngày -->
+                        <div class="flex flex-shrink-0 border-b border-white/60 bg-white/30">
+                            <div class="w-20 flex-shrink-0 border-r border-white/60 flex items-center justify-center">
+                                <span class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Ca</span>
+                            </div>
+                            <div id="calendarHeader" class="flex-1 grid grid-cols-7"></div>
                         </div>
 
-                        <!-- Khung soạn thảo -->
-                        <div class="flex-1 flex flex-col p-6 overflow-hidden">
-                            <input type="text" id="note-title-input" placeholder="Tiêu đề ghi chú..." class="w-full text-2xl font-bold text-gray-900 placeholder-gray-300 bg-transparent border-none outline-none mb-4">
-                            <textarea id="note-content-input" placeholder="Viết nội dung của bạn tại đây (Hỗ trợ định dạng Markdown)..." class="flex-1 w-full bg-transparent resize-none outline-none text-gray-700 leading-relaxed font-medium text-[15px]"></textarea>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ==================== VIEW: TÀI LIỆU ==================== -->
-                <div id="view-documents" class="flex flex-col h-full w-full hidden transition-opacity duration-300">
-                    <header class="h-[88px] flex-shrink-0 flex items-center justify-between px-8 z-10 border-b border-[var(--border-soft)] bg-white/50 backdrop-blur-sm">
-                        <div>
-                            <h2 class="text-2xl font-bold text-gray-900">Tài liệu học tập</h2>
-                            <p class="text-sm text-gray-500 font-medium mt-1">Quản lý kho tàng kiến thức 📚</p>
-                        </div>
-                        <div class="flex items-center gap-3">
-                            <!-- Input ẩn để nhận file zip -->
-                            <input type="file" id="import-doc-zip-input" accept=".zip" class="hidden" onchange="importDocsFromZip(event)">
-                            
-                            <button onclick="document.getElementById('import-doc-zip-input').click()" class="hidden lg:flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all font-semibold text-sm shadow-sm" title="Nhập dữ liệu">
-                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                                Nhập Zip
-                            </button>
-                            
-                            <button onclick="exportDocsToZip()" class="hidden lg:flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all font-semibold text-sm shadow-sm" title="Xuất dữ liệu">
-                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                                Xuất Zip
-                            </button>
-
-                            <div class="w-px h-6 bg-gray-200 hidden lg:block mx-1"></div>
-
-                            <button id="btn-create-doc-group" onclick="openCreateGroupModal()" class="flex items-center gap-2 px-5 py-2.5 bg-[var(--accent-blue)] text-white rounded-xl shadow-[0_4px_15px_rgba(0,102,255,0.25)] hover:bg-[var(--accent-blue-hover)] transition-all font-semibold text-sm">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                                Tạo tài liệu
-                            </button>
-                        </div>
-                    </header>
-
-                    <!-- Danh sách thư mục tài liệu -->
-                    <div id="doc-groups-area" class="flex-1 overflow-auto p-6">
-                        <div id="doc-groups-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            <!-- JS render thẻ thư mục -->
-                        </div>
-                    </div>
-
-                    <!-- Chi tiết 1 thư mục (Danh sách Link) -->
-                    <div id="single-group-area" class="flex-1 hidden flex-col bg-white overflow-hidden rounded-b-[2rem]">
-                        <div class="flex-shrink-0 border-b border-[var(--border-soft)] bg-gray-50/50 p-4 px-6 flex items-center justify-between">
-                            <div class="flex items-center gap-4">
-                                <button onclick="closeGroupDetails()" class="w-10 h-10 flex items-center justify-center rounded-full bg-white border border-gray-200 text-gray-600 hover:bg-gray-100 transition-colors shadow-sm">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-                                </button>
-                                <div>
-                                    <h3 id="current-group-title" class="text-lg font-bold text-gray-900 flex items-center gap-2">
-                                        <span id="current-group-color-dot" class="w-3 h-3 rounded-full bg-blue-500"></span>
-                                        Tên Thư Mục
-                                    </h3>
-                                    <p class="text-xs text-gray-500 font-medium">Quản lý các trang web tài liệu</p>
+                        <!-- Lưới Môn Học -->
+                        <div class="flex-1 flex bg-white/10">
+                            <div class="w-20 flex-shrink-0 flex flex-col border-r border-white/60 bg-white/30">
+                                <div class="flex-1 flex items-center justify-center border-b border-dashed border-white/60">
+                                    <span class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Sáng</span>
+                                </div>
+                                <div class="flex-1 flex items-center justify-center">
+                                    <span class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Chiều</span>
                                 </div>
                             </div>
-                            <button onclick="openCreateLinkModal()" class="px-5 py-2 bg-gray-900 text-white rounded-xl shadow-sm hover:bg-gray-800 transition-all font-semibold text-sm flex items-center gap-2">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
-                                Tạo tài liệu web
-                            </button>
+                            <div id="scheduleBoard" class="flex-1 grid grid-cols-7"></div>
                         </div>
-                        <div class="flex-1 overflow-auto p-6 bg-[var(--bg-content-area)]">
-                            <div id="links-list-container" class="flex flex-col gap-3 max-w-4xl mx-auto">
-                                <!-- JS render thẻ link -->
-                            </div>
-                        </div>
+
                     </div>
                 </div>
-
             </div>
+
+            <!-- VIEW 2: GHI CHÚ -->
+            <div id="view-notes" class="flex flex-col h-full w-full hidden">
+                <header class="h-[80px] flex-shrink-0 flex items-center justify-between px-6 lg:px-8 border-b border-white/50 bg-white/20 backdrop-blur-xl z-10">
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-800 tracking-tight">Nhật ký & Ghi chú</h2>
+                        <p class="text-sm text-slate-500 font-medium">Lưu giữ mọi suy nghĩ</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <input type="file" id="import-zip-input" accept=".zip" class="hidden" onchange="importNotesFromZip(event)">
+                        <button onclick="document.getElementById('import-zip-input').click()" class="hidden md:flex items-center gap-2 px-4 py-2.5 bg-white/50 border border-white/60 text-slate-700 rounded-xl hover:bg-white/80 transition-all text-sm font-semibold shadow-sm backdrop-blur-sm">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                            Nhập Zip
+                        </button>
+                        <button onclick="exportNotesToZip()" class="hidden md:flex items-center gap-2 px-4 py-2.5 bg-white/50 border border-white/60 text-slate-700 rounded-xl hover:bg-white/80 transition-all text-sm font-semibold shadow-sm backdrop-blur-sm">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                            Xuất Zip
+                        </button>
+                        <div class="w-px h-6 bg-white/50 hidden md:block mx-1"></div>
+                        <button onclick="showNoteEditor()" class="flex items-center gap-2 px-5 py-2.5 bg-blue-600/90 backdrop-blur-md text-white rounded-xl hover:bg-blue-600 shadow-sm border border-blue-500/50 transition-all font-semibold text-sm">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                            Tạo ghi chú
+                        </button>
+                    </div>
+                </header>
+
+                <div id="notes-list-area" class="flex-1 overflow-auto p-6 lg:p-8 relative">
+                    <div id="notes-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 relative z-10"></div>
+                </div>
+
+                <div id="note-editor-area" class="flex-1 hidden flex-col glass-panel !bg-white/70 overflow-hidden relative z-20 m-6 rounded-3xl shadow-xl border-white">
+                    <div class="flex-shrink-0 border-b border-white/60 bg-white/40 p-3 px-6 flex items-center gap-2 overflow-x-auto">
+                        <button onclick="insertMarkdown('bold')" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-700 hover:bg-white/60 transition-colors shadow-sm bg-white/30 border border-white/50"><b>B</b></button>
+                        <button onclick="insertMarkdown('italic')" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-700 hover:bg-white/60 transition-colors shadow-sm bg-white/30 border border-white/50"><i>I</i></button>
+                        <div class="w-px h-5 bg-slate-300/50 mx-1"></div>
+                        <button onclick="insertMarkdown('h1')" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-700 hover:bg-white/60 font-bold text-xs shadow-sm bg-white/30 border border-white/50">H1</button>
+                        <button onclick="insertMarkdown('h2')" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-700 hover:bg-white/60 font-bold text-xs shadow-sm bg-white/30 border border-white/50">H2</button>
+                        <div class="w-px h-5 bg-slate-300/50 mx-1"></div>
+                        <button onclick="insertMarkdown('quote')" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-700 hover:bg-white/60 font-serif font-bold text-lg shadow-sm bg-white/30 border border-white/50">”</button>
+                        <button onclick="insertMarkdown('link')" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-700 hover:bg-white/60 shadow-sm bg-white/30 border border-white/50">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+                        </button>
+                        <button onclick="insertMarkdown('list')" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-700 hover:bg-white/60 shadow-sm bg-white/30 border border-white/50">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
+                        </button>
+                        
+                        <div class="flex-1"></div>
+                        <button onclick="hideNoteEditor()" class="px-5 py-2 text-sm text-slate-600 hover:text-slate-900 transition-colors font-bold bg-white/40 border border-white/60 rounded-xl hover:bg-white/80 shadow-sm">Hủy</button>
+                        <button onclick="saveNote()" class="px-6 py-2 bg-blue-600/90 backdrop-blur-sm text-white text-sm font-semibold rounded-xl hover:bg-blue-600 shadow-sm border border-blue-500/50 transition-colors">Lưu lại</button>
+                    </div>
+                    <div class="flex-1 flex flex-col p-8 lg:p-12 overflow-hidden bg-transparent max-w-4xl mx-auto w-full">
+                        <input type="text" id="note-title-input" placeholder="Tiêu đề..." class="w-full text-3xl font-bold text-slate-800 placeholder-slate-400 bg-transparent border-none outline-none mb-6">
+                        <textarea id="note-content-input" placeholder="Bắt đầu viết nội dung (Hỗ trợ Markdown)..." class="flex-1 w-full bg-transparent resize-none outline-none text-slate-700 text-[15px] leading-relaxed"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW 3: TÀI LIỆU -->
+            <div id="view-documents" class="flex flex-col h-full w-full hidden">
+                <header class="h-[80px] flex-shrink-0 flex items-center justify-between px-6 lg:px-8 border-b border-white/50 bg-white/20 backdrop-blur-xl z-10">
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-800 tracking-tight">Quản lý Tài liệu</h2>
+                        <p class="text-sm text-slate-500 font-medium">Bộ sưu tập liên kết web</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <input type="file" id="import-doc-zip-input" accept=".zip" class="hidden" onchange="importDocsFromZip(event)">
+                        <button onclick="document.getElementById('import-doc-zip-input').click()" class="hidden md:flex items-center gap-2 px-4 py-2.5 bg-white/50 border border-white/60 text-slate-700 rounded-xl hover:bg-white/80 transition-all text-sm font-semibold shadow-sm backdrop-blur-sm">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                            Nhập
+                        </button>
+                        <button onclick="exportDocsToZip()" class="hidden md:flex items-center gap-2 px-4 py-2.5 bg-white/50 border border-white/60 text-slate-700 rounded-xl hover:bg-white/80 transition-all text-sm font-semibold shadow-sm backdrop-blur-sm">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                            Xuất
+                        </button>
+                        <div class="w-px h-6 bg-white/50 hidden md:block mx-1"></div>
+                        <button id="btn-create-doc-group" onclick="openCreateGroupModal()" class="flex items-center gap-2 px-5 py-2.5 bg-blue-600/90 backdrop-blur-md text-white rounded-xl hover:bg-blue-600 shadow-sm border border-blue-500/50 transition-all font-semibold text-sm">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                            Thư mục mới
+                        </button>
+                    </div>
+                </header>
+
+                <div id="doc-groups-area" class="flex-1 overflow-auto p-6 lg:p-8 relative">
+                    <div id="doc-groups-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 relative z-10"></div>
+                </div>
+
+                <div id="single-group-area" class="flex-1 hidden flex-col glass-panel !bg-white/60 overflow-hidden relative z-20 m-6 rounded-3xl shadow-lg border-white">
+                    <div class="flex-shrink-0 border-b border-white/60 bg-white/50 p-4 px-6 lg:px-8 flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <button onclick="closeGroupDetails()" class="w-10 h-10 flex items-center justify-center rounded-xl bg-white/50 border border-white/80 text-slate-600 hover:bg-white hover:text-slate-900 transition-colors shadow-sm">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                            </button>
+                            <h3 id="current-group-title" class="text-lg font-bold text-slate-800 flex items-center gap-2"></h3>
+                        </div>
+                        <button onclick="openCreateLinkModal()" class="px-5 py-2 bg-white/50 border border-white/80 text-slate-800 rounded-xl hover:bg-white shadow-sm transition-all font-bold text-sm flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                            Thêm Link
+                        </button>
+                    </div>
+                    <div class="flex-1 overflow-auto p-6 lg:p-8 bg-transparent">
+                        <div id="links-list-container" class="flex flex-col gap-4 max-w-4xl mx-auto"></div>
+                    </div>
+                </div>
+            </div>
+
         </main>
     </div>
 
-    <!-- Modals cho Tài liệu -->
-    <div id="modal-group" class="fixed inset-0 z-50 hidden items-center justify-center bg-gray-900/40 backdrop-blur-sm">
-        <div class="bg-white rounded-3xl shadow-xl w-full max-w-md overflow-hidden transform transition-all p-6 mx-4">
-            <h3 class="text-xl font-bold text-gray-900 mb-4">Tạo nhóm tài liệu mới</h3>
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-1.5">Tên tài liệu</label>
-                <input type="text" id="group-name-input" placeholder="Ví dụ: Tài liệu Frontend..." class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--accent-blue)] focus:border-transparent transition-all">
+    <!-- ==================== MODALS GLASSMORPHISM ==================== -->
+    <div id="modal-schedule" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/30 backdrop-blur-md">
+        <div class="glass-panel border border-white/80 rounded-3xl shadow-2xl w-full max-w-md p-8 mx-4 relative overflow-hidden">
+            <div class="absolute -top-10 -right-10 w-40 h-40 bg-blue-300/30 rounded-full blur-2xl -z-10"></div>
+            <h3 class="text-xl font-bold text-slate-900 mb-1 relative z-10">Thêm Lịch Học</h3>
+            <p id="schedule-modal-subtitle" class="text-sm text-slate-600 mb-6 font-medium relative z-10">Thứ 2 - Sáng</p>
+
+            <div class="space-y-4 mb-8 relative z-10">
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Tên môn học <span class="text-red-400">*</span></label>
+                    <input type="text" id="schedule-subject" placeholder="VD: Toán cao cấp..." class="w-full px-4 py-3 bg-white/50 border border-white/60 text-slate-900 rounded-xl focus:outline-none focus:border-blue-400 focus:bg-white/80 backdrop-blur-sm shadow-sm transition-colors">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Giảng viên</label>
+                        <input type="text" id="schedule-teacher" placeholder="VD: Thầy Tuyến..." class="w-full px-4 py-3 bg-white/50 border border-white/60 text-slate-900 rounded-xl focus:outline-none focus:border-blue-400 focus:bg-white/80 backdrop-blur-sm shadow-sm transition-colors">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Phòng học</label>
+                        <input type="text" id="schedule-room" placeholder="VD: B201..." class="w-full px-4 py-3 bg-white/50 border border-white/60 text-slate-900 rounded-xl focus:outline-none focus:border-blue-400 focus:bg-white/80 backdrop-blur-sm shadow-sm transition-colors">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Thời gian</label>
+                    <input type="text" id="schedule-time" placeholder="VD: 08:00 - 09:40..." class="w-full px-4 py-3 bg-white/50 border border-white/60 text-slate-900 rounded-xl focus:outline-none focus:border-blue-400 focus:bg-white/80 backdrop-blur-sm shadow-sm transition-colors">
+                </div>
+            </div>
+            
+            <div class="flex justify-end gap-3 relative z-10">
+                <button onclick="closeCreateScheduleModal()" class="px-5 py-2.5 text-sm font-bold text-slate-600 bg-white/50 border border-white/60 hover:bg-white/80 shadow-sm rounded-xl">Hủy</button>
+                <button onclick="saveSchedule()" class="px-6 py-2.5 bg-blue-600/90 text-white text-sm font-bold rounded-xl hover:bg-blue-600 border border-blue-400/50 shadow-md">Lưu lịch</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-group" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/30 backdrop-blur-md">
+        <div class="glass-panel border border-white/80 rounded-3xl shadow-2xl w-full max-w-md p-8 mx-4 relative overflow-hidden">
+            <div class="absolute -top-10 -right-10 w-40 h-40 bg-purple-300/30 rounded-full blur-2xl -z-10"></div>
+            <h3 class="text-xl font-bold text-slate-900 mb-6">Tạo Group Tài Liệu</h3>
+            <div class="mb-5">
+                <label class="block text-sm font-semibold text-slate-700 mb-2">Tên nhóm</label>
+                <input type="text" id="group-name-input" placeholder="Ví dụ: Design References" class="w-full px-4 py-3 bg-white/50 border border-white/60 text-slate-900 rounded-xl focus:outline-none focus:border-purple-400 focus:bg-white/80 backdrop-blur-sm shadow-sm transition-colors">
             </div>
             <div class="mb-8">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Chọn màu sắc (Chrome Tabs Style)</label>
-                <div class="flex items-center gap-3" id="color-picker">
-                    <button type="button" onclick="selectColor('blue', this)" class="color-btn w-8 h-8 rounded-full bg-blue-500 ring-2 ring-offset-2 ring-blue-500 transition-all"></button>
-                    <button type="button" onclick="selectColor('purple', this)" class="color-btn w-8 h-8 rounded-full bg-purple-500 ring-0 ring-offset-2 ring-purple-500 transition-all"></button>
-                    <button type="button" onclick="selectColor('pink', this)" class="color-btn w-8 h-8 rounded-full bg-pink-500 ring-0 ring-offset-2 ring-pink-500 transition-all"></button>
-                    <button type="button" onclick="selectColor('orange', this)" class="color-btn w-8 h-8 rounded-full bg-orange-500 ring-0 ring-offset-2 ring-orange-500 transition-all"></button>
-                    <button type="button" onclick="selectColor('green', this)" class="color-btn w-8 h-8 rounded-full bg-green-500 ring-0 ring-offset-2 ring-green-500 transition-all"></button>
+                <label class="block text-sm font-semibold text-slate-700 mb-3">Màu chủ đạo</label>
+                <div class="flex gap-4" id="color-picker">
+                    <button type="button" onclick="selectColor('blue', this)" class="color-btn w-8 h-8 rounded-full bg-blue-400 ring-2 ring-offset-2 ring-offset-transparent ring-blue-400 shadow-sm"></button>
+                    <button type="button" onclick="selectColor('purple', this)" class="color-btn w-8 h-8 rounded-full bg-purple-400 ring-0 ring-offset-2 ring-offset-transparent ring-purple-400 shadow-sm"></button>
+                    <button type="button" onclick="selectColor('pink', this)" class="color-btn w-8 h-8 rounded-full bg-pink-400 ring-0 ring-offset-2 ring-offset-transparent ring-pink-400 shadow-sm"></button>
+                    <button type="button" onclick="selectColor('orange', this)" class="color-btn w-8 h-8 rounded-full bg-orange-400 ring-0 ring-offset-2 ring-offset-transparent ring-orange-400 shadow-sm"></button>
+                    <button type="button" onclick="selectColor('emerald', this)" class="color-btn w-8 h-8 rounded-full bg-emerald-400 ring-0 ring-offset-2 ring-offset-transparent ring-emerald-400 shadow-sm"></button>
                 </div>
             </div>
             <div class="flex justify-end gap-3">
-                <button onclick="closeCreateGroupModal()" class="px-5 py-2.5 text-sm font-semibold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">Hủy</button>
-                <button onclick="saveGroup()" class="px-5 py-2.5 bg-[var(--accent-blue)] text-white text-sm font-semibold rounded-xl hover:bg-[var(--accent-blue-hover)] shadow-sm transition-colors">Tạo mới</button>
+                <button onclick="closeCreateGroupModal()" class="px-5 py-2.5 text-sm font-bold text-slate-600 bg-white/50 border border-white/60 hover:bg-white/80 shadow-sm rounded-xl">Hủy</button>
+                <button onclick="saveGroup()" class="px-6 py-2.5 bg-blue-600/90 text-white text-sm font-bold rounded-xl hover:bg-blue-600 border border-blue-400/50 shadow-md">Lưu lại</button>
             </div>
         </div>
     </div>
 
-    <!-- Modal Tạo Link -->
-    <div id="modal-link" class="fixed inset-0 z-50 hidden items-center justify-center bg-gray-900/40 backdrop-blur-sm">
-        <div class="bg-white rounded-3xl shadow-xl w-full max-w-md overflow-hidden transform transition-all p-6 mx-4">
-            <h3 class="text-xl font-bold text-gray-900 mb-4">Tạo tài liệu web</h3>
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-1.5">Tên trang web</label>
-                <input type="text" id="link-name-input" placeholder="Ví dụ: Tài liệu Figma..." class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--accent-blue)] transition-all">
+    <div id="modal-link" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/30 backdrop-blur-md">
+        <div class="glass-panel border border-white/80 rounded-3xl shadow-2xl w-full max-w-md p-8 mx-4 relative overflow-hidden">
+            <div class="absolute -bottom-10 -left-10 w-40 h-40 bg-emerald-300/30 rounded-full blur-2xl -z-10"></div>
+            <h3 class="text-xl font-bold text-slate-900 mb-6">Thêm Liên Kết Mới</h3>
+            <div class="mb-5">
+                <label class="block text-sm font-semibold text-slate-700 mb-2">Tên trang web</label>
+                <input type="text" id="link-name-input" placeholder="Ví dụ: Tailwind Docs" class="w-full px-4 py-3 bg-white/50 border border-white/60 text-slate-900 rounded-xl focus:outline-none focus:border-blue-400 focus:bg-white/80 backdrop-blur-sm shadow-sm transition-colors">
             </div>
             <div class="mb-8">
-                <label class="block text-sm font-medium text-gray-700 mb-1.5">Đường dẫn (URL)</label>
-                <input type="url" id="link-url-input" placeholder="https://..." class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--accent-blue)] transition-all">
+                <label class="block text-sm font-semibold text-slate-700 mb-2">URL</label>
+                <input type="url" id="link-url-input" placeholder="https://..." class="w-full px-4 py-3 bg-white/50 border border-white/60 text-slate-900 rounded-xl focus:outline-none focus:border-blue-400 focus:bg-white/80 backdrop-blur-sm shadow-sm transition-colors">
             </div>
             <div class="flex justify-end gap-3">
-                <button onclick="closeCreateLinkModal()" class="px-5 py-2.5 text-sm font-semibold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">Hủy</button>
-                <button onclick="saveLink()" class="px-5 py-2.5 bg-gray-900 text-white text-sm font-semibold rounded-xl hover:bg-gray-800 shadow-sm transition-colors">Lưu tài liệu</button>
+                <button onclick="closeCreateLinkModal()" class="px-5 py-2.5 text-sm font-bold text-slate-600 bg-white/50 border border-white/60 hover:bg-white/80 shadow-sm rounded-xl">Hủy</button>
+                <button onclick="saveLink()" class="px-6 py-2.5 bg-blue-600/90 text-white text-sm font-bold rounded-xl hover:bg-blue-600 border border-blue-400/50 shadow-md">Lưu lại</button>
             </div>
         </div>
     </div>
 
+    <!-- ==================== SCRIPTS ==================== -->
     <script>
-        /* ======================== CHỨC NĂNG THÔNG BÁO (TOAST) ======================== */
+        /* TẠO TOAST THÔNG BÁO GLASS */
         function showToast(message) {
             const toast = document.createElement('div');
-            toast.className = 'fixed bottom-6 right-6 bg-gray-900 text-white px-6 py-3.5 rounded-xl shadow-2xl z-[100] transform transition-all duration-300 translate-y-10 opacity-0 font-medium text-sm flex items-center gap-3 border border-gray-700';
-            toast.innerHTML = `
-                <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                ${message}
-            `;
+            toast.className = 'fixed bottom-8 left-8 glass-panel border border-white/80 text-slate-800 px-6 py-3.5 rounded-2xl shadow-xl z-[100] transform transition-all duration-300 translate-y-10 opacity-0 font-bold text-sm flex items-center gap-3';
+            toast.innerHTML = `<svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>${message}`;
             document.body.appendChild(toast);
-            
-            setTimeout(() => {
-                toast.classList.remove('translate-y-10', 'opacity-0');
-            }, 10);
-            
-            setTimeout(() => {
-                toast.classList.add('translate-y-10', 'opacity-0');
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
+            setTimeout(() => toast.classList.remove('translate-y-10', 'opacity-0'), 10);
+            setTimeout(() => { toast.classList.add('translate-y-10', 'opacity-0'); setTimeout(() => toast.remove(), 300); }, 3000);
         }
 
-        /* ======================== CHỨC NĂNG ĐIỀU HƯỚNG TABS ======================== */
+        /* ĐIỀU HƯỚNG TABS */
         function switchTab(tabId) {
-            // Đổi giao diện
-            document.getElementById('view-calendar').classList.add('hidden');
-            document.getElementById('view-notes').classList.add('hidden');
-            document.getElementById('view-documents').classList.add('hidden');
+            ['calendar', 'notes', 'documents'].forEach(id => {
+                const el = document.getElementById(`view-${id}`);
+                if (el) el.classList.add('hidden');
+            });
             document.getElementById(`view-${tabId}`).classList.remove('hidden');
 
-            // Reset state của tab Ghi chú
-            if(tabId === 'notes') {
-                hideNoteEditor();
-                renderNotesList();
-            }
+            if(tabId === 'notes') { hideNoteEditor(); renderNotesList(); }
+            if(tabId === 'documents') { closeGroupDetails(); renderDocGroups(); }
 
-            // Reset state của tab Tài liệu
-            if(tabId === 'documents') {
-                closeGroupDetails();
-                renderDocGroups();
-            }
-
-            // Đổi UI Navigation
             document.querySelectorAll('.nav-item').forEach(item => {
-                item.className = "nav-item flex items-center gap-4 px-4 py-3.5 text-gray-400 hover:text-gray-800 hover:bg-gray-50 rounded-2xl transition-all font-medium";
+                item.className = "nav-item flex items-center gap-4 px-4 py-3.5 text-slate-600 hover:text-slate-900 hover:bg-white/40 rounded-2xl transition-all font-semibold border border-transparent shadow-none";
             });
-            
             const activeNav = document.getElementById(`nav-${tabId}`);
             if(activeNav) {
-                activeNav.className = "nav-item active flex items-center gap-4 px-4 py-3.5 bg-[var(--accent-blue)] text-white rounded-2xl shadow-[0_4px_15px_rgba(0,102,255,0.25)] transition-all font-semibold";
+                activeNav.className = "nav-item active flex items-center gap-4 px-4 py-3.5 bg-white/70 text-blue-600 rounded-2xl border border-white shadow-sm transition-all font-bold backdrop-blur-md";
             }
         }
 
-        /* ======================== CHỨC NĂNG LỊCH HỌC ======================== */
-        const pastelThemes = [
-            { bg: 'bg-[#EFF6FF]', text: 'text-[#2563EB]', icon: 'text-[#60A5FA]' },
-            { bg: 'bg-[#FEF2F2]', text: 'text-[#DC2626]', icon: 'text-[#F87171]' },
-            { bg: 'bg-[#FAF5FF]', text: 'text-[#9333EA]', icon: 'text-[#C084FC]' },
-            { bg: 'bg-[#FFF7ED]', text: 'text-[#EA580C]', icon: 'text-[#FB923C]' },
-            { bg: 'bg-[#F0FDF4]', text: 'text-[#16A34A]', icon: 'text-[#4ADE80]' } 
-        ];
-
-        const getThemeForSubject = (str) => {
-            let hash = 0;
-            for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
-            return pastelThemes[Math.abs(hash) % pastelThemes.length];
-        };
-
+        /* DỮ LIỆU CHUNG (MÔ PHỎNG DATABASE) */
         const schedules = [
             { id: 1, subject: "Kiến trúc máy tính", room: "B201", teacher: "Vũ Trọng Chiến", day: "Thứ 2", time: "Tiết 1-2", session: "Sáng" },
             { id: 2, subject: "Anh văn cơ sở 2", room: "B201", teacher: "Mai Văn Sao", day: "Thứ 2", time: "Tiết 3-5", session: "Sáng" },
             { id: 3, subject: "Toán cao cấp 3", room: "B201", teacher: "Đoàn Thị Bích", day: "Thứ 3", time: "Tiết 2-4", session: "Chiều" },
             { id: 4, subject: "Nhập môn Lập trình", room: "B201", teacher: "Đỗ Văn Tuyến", day: "Thứ 4", time: "Tiết 1-4", session: "Chiều" },
-            { id: 5, subject: "Chủ nghĩa xã hội KH", room: "B201", teacher: "Phạm Thị Oanh", day: "Thứ 5", time: "Tiết 1-3", session: "Chiều" },
+            { id: 5, subject: "Chủ nghĩa XHKH", room: "B201", teacher: "Phạm Thị Oanh", day: "Thứ 5", time: "Tiết 1-3", session: "Chiều" },
             { id: 6, subject: "Bảo vệ môi trường", room: "B201", teacher: "Nguyễn Thị Tươi", day: "Thứ 5", time: "Tiết 4-5", session: "Chiều" },
             { id: 7, subject: "Anh văn cơ sở 2", room: "B201", teacher: "Mai Văn Sao", day: "Thứ 6", time: "Tiết 1-2", session: "Sáng" },
             { id: 8, subject: "Lập trình Python", room: "B201", teacher: "Đỗ Văn Tuyến", day: "Thứ 6", time: "Tiết 3-5", session: "Sáng" }
         ];
+        let notesData = [];
+        let docGroups = [];
+
+        /* ======================== LỊCH HỌC (GLASSMORPHISM) ======================== */
+        // Style mây trắng viền mỏng kính
+        const lightThemes = [
+            { card: 'bg-blue-50/70 border-blue-200/60', text: 'text-blue-800', icon: 'bg-white/80 text-blue-500 border-white' },
+            { card: 'bg-indigo-50/70 border-indigo-200/60', text: 'text-indigo-800', icon: 'bg-white/80 text-indigo-500 border-white' },
+            { card: 'bg-emerald-50/70 border-emerald-200/60', text: 'text-emerald-800', icon: 'bg-white/80 text-emerald-500 border-white' },
+            { card: 'bg-purple-50/70 border-purple-200/60', text: 'text-purple-800', icon: 'bg-white/80 text-purple-500 border-white' },
+            { card: 'bg-pink-50/70 border-pink-200/60', text: 'text-pink-800', icon: 'bg-white/80 text-pink-500 border-white' }
+        ];
+        const getThemeForSubject = (str) => {
+            let hash = 0; for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+            return lightThemes[Math.abs(hash) % lightThemes.length];
+        };
 
         const daysOfWeek = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "Chủ Nhật"];
         const today = new Date();
         const currentDayIndex = today.getDay() === 0 ? 6 : today.getDay() - 1; 
         const currentDayStr = daysOfWeek[currentDayIndex];
-        const weekDates = [];
-        const firstDayOfWeek = new Date(today);
-        firstDayOfWeek.setDate(today.getDate() - currentDayIndex);
-        
-        for (let i = 0; i < 7; i++) {
-            const d = new Date(firstDayOfWeek);
-            d.setDate(firstDayOfWeek.getDate() + i);
-            weekDates.push(d.getDate());
-        }
+        const weekDates = Array.from({length: 7}, (_, i) => {
+            const d = new Date(today); d.setDate(today.getDate() - currentDayIndex + i); return d.getDate();
+        });
 
-        const renderSchedule = () => {
+        function renderSchedule() {
             const board = document.getElementById('scheduleBoard');
-            const calendarHeader = document.getElementById('calendarHeader');
-            if(!board || !calendarHeader) return;
+            const header = document.getElementById('calendarHeader');
+            if(!board || !header) return;
             
-            board.innerHTML = ""; 
-            calendarHeader.innerHTML = "";
+            board.innerHTML = ""; header.innerHTML = "";
 
             daysOfWeek.forEach((day, index) => {
                 const isToday = day === currentDayStr;
-                const dateNum = weekDates[index];
                 
-                let headerContent = `
-                    <div class="py-4 flex flex-col items-center justify-center relative dashed-column border-b-0">
-                        <span class="text-[13px] font-semibold uppercase ${isToday ? 'text-[var(--accent-blue)]' : 'text-gray-400'} mb-1.5">${day}</span>
-                        <div class="w-10 h-10 flex items-center justify-center rounded-2xl text-base font-bold transition-all ${isToday ? 'bg-[var(--accent-blue)] text-white shadow-[0_4px_15px_rgba(0,102,255,0.3)]' : 'text-gray-800 bg-transparent'}">
-                            ${dateNum}
+                header.innerHTML += `
+                    <div class="py-5 flex flex-col items-center justify-center relative border-r border-white/60 bg-white/20">
+                        <span class="text-[13px] font-bold ${isToday ? 'text-blue-700' : 'text-slate-500'} mb-1.5">${day}</span>
+                        <div class="w-9 h-9 flex items-center justify-center rounded-xl text-sm font-bold transition-all ${isToday ? 'bg-blue-600 text-white shadow-md' : 'text-slate-700 bg-white/50 border border-white/80'}">
+                            ${weekDates[index]}
                         </div>
-                    </div>
-                `;
-                calendarHeader.innerHTML += headerContent;
+                    </div>`;
 
                 let dayClasses = schedules.filter(s => s.day === day);
-                let morningClasses = dayClasses.filter(c => c.session === 'Sáng');
-                let afternoonClasses = dayClasses.filter(c => c.session === 'Chiều');
-                morningClasses.sort((a, b) => a.time.localeCompare(b.time));
-                afternoonClasses.sort((a, b) => a.time.localeCompare(b.time));
+                let mClasses = dayClasses.filter(c => c.session === 'Sáng').sort((a,b) => a.time.localeCompare(b.time));
+                let aClasses = dayClasses.filter(c => c.session === 'Chiều').sort((a,b) => a.time.localeCompare(b.time));
 
-                const dayColumn = document.createElement('div');
-                dayColumn.className = `dashed-column flex flex-col h-full ${isToday ? 'bg-blue-50/20' : ''}`;
-                
-                const renderCards = (classes) => {
-                    if (classes.length === 0) {
-                        return `<div class="mt-2 flex flex-col items-center justify-center h-20 border-2 border-dashed border-gray-200 rounded-2xl opacity-40 hover:opacity-100 transition-opacity"><span class="text-xs text-gray-400 font-medium">+ Thêm lịch</span></div>`;
+                const renderCards = (classes, dayName, sessionName) => {
+                    if (!classes.length) {
+                        return `
+                            <div onclick="openCreateScheduleModal('${dayName}', '${sessionName}')" class="h-24 border border-dashed border-white/80 bg-white/30 rounded-[20px] m-1 flex items-center justify-center cursor-pointer hover:bg-white/60 hover:border-white transition-all group shadow-sm backdrop-blur-sm">
+                                <span class="text-[14px] text-slate-500 font-bold group-hover:text-blue-600 tracking-wide">Trống</span>
+                            </div>`;
                     }
-                    let html = "";
-                    classes.forEach(item => {
-                        const theme = getThemeForSubject(item.subject);
-                        html += `
-                            <div class="schedule-card bg-white border border-[var(--border-soft)] rounded-[20px] p-3.5 cursor-pointer relative group shadow-sm hover-lift">
+                    
+                    let html = classes.map(item => {
+                        const t = getThemeForSubject(item.subject);
+                        return `
+                            <div class="border rounded-[20px] p-4 cursor-pointer relative hover-lift backdrop-blur-md shadow-sm ${t.card}">
                                 <div class="flex items-start gap-3">
-                                    <div class="w-10 h-10 mt-0.5 rounded-[12px] ${theme.bg} ${theme.text} flex items-center justify-center flex-shrink-0">
+                                    <div class="w-10 h-10 rounded-[12px] flex items-center justify-center flex-shrink-0 border shadow-sm ${t.icon}">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477-4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
                                     </div>
                                     <div class="flex-1 min-w-0">
-                                        <h5 class="font-bold text-[13px] xl:text-[14px] text-gray-900 leading-snug mb-1.5">${item.subject}</h5>
-                                        <div class="flex flex-col gap-1.5">
-                                            <div class="flex items-center gap-1.5 text-[11px] xl:text-[12px] text-gray-500 font-medium truncate">
-                                                <svg class="w-3.5 h-3.5 ${theme.icon}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-                                                <span class="truncate" title="${item.teacher}">${item.teacher}</span>
-                                            </div>
-                                            <div class="flex items-center gap-1.5 text-[11px] xl:text-[12px] text-gray-400 font-medium truncate">
-                                                <svg class="w-3.5 h-3.5 ${theme.icon}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                                <span>${item.time}</span>
-                                                <span class="w-1 h-1 rounded-full bg-gray-300 mx-0.5"></span>
-                                                <span class="truncate">P. ${item.room}</span>
-                                            </div>
+                                        <h5 class="font-bold text-[13px] ${t.text} mb-1.5 leading-snug truncate">${item.subject}</h5>
+                                        <div class="text-[11px] text-slate-600 font-bold mb-1 tracking-wide opacity-80">${item.time}</div>
+                                        <div class="text-[11px] text-slate-600 flex items-center gap-1.5 opacity-80 font-medium">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                                            <span class="truncate">${item.teacher}</span>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        `;
-                    });
-                    return html;
+                            </div>`;
+                    }).join('');
+
+                    html += `
+                        <div onclick="openCreateScheduleModal('${dayName}', '${sessionName}')" class="mt-1 py-1.5 flex items-center justify-center cursor-pointer rounded-xl hover:bg-white/60 hover:shadow-sm border border-transparent hover:border-white/80 text-slate-500 hover:text-blue-600 transition-all opacity-0 group-hover:opacity-100 hover:opacity-100 font-bold">
+                            <span class="text-[11px] flex items-center gap-1 tracking-wide">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                Thêm môn
+                            </span>
+                        </div>
+                    `;
+                    return `<div class="group h-full flex flex-col">${html}</div>`;
                 };
 
+                const dayColumn = document.createElement('div');
+                dayColumn.className = `border-r border-white/60 flex flex-col h-full bg-white/20 backdrop-blur-sm`;
                 dayColumn.innerHTML = `
-                    <div class="flex-1 p-2 md:p-3 flex flex-col gap-3 border-b border-dashed border-[var(--border-soft)]">
-                        ${renderCards(morningClasses)}
-                    </div>
-                    <div class="flex-1 p-2 md:p-3 flex flex-col gap-3">
-                        ${renderCards(afternoonClasses)}
-                    </div>
+                    <div class="flex-1 p-3 flex flex-col gap-3 dashed-border-y">${renderCards(mClasses, day, 'Sáng')}</div>
+                    <div class="flex-1 p-3 flex flex-col gap-3">${renderCards(aClasses, day, 'Chiều')}</div>
                 `;
                 board.appendChild(dayColumn);
             });
-        };
-        // Khởi tạo Lịch học ngay khi tải trang
+        }
         renderSchedule();
 
-        /* ======================== CHỨC NĂNG GHI CHÚ (MARKDOWN) ======================== */
-        let notesData = [];
+        let currentScheduleDay = '';
+        let currentScheduleSession = '';
+
+        function openCreateScheduleModal(day, session) {
+            currentScheduleDay = day;
+            currentScheduleSession = session;
+            document.getElementById('schedule-modal-subtitle').innerText = `Dành cho ${day} - Ca ${session}`;
+            document.getElementById('modal-schedule').classList.remove('hidden');
+            document.getElementById('modal-schedule').classList.add('flex');
+            
+            document.getElementById('schedule-subject').value = "";
+            document.getElementById('schedule-teacher').value = "";
+            document.getElementById('schedule-room').value = "";
+            document.getElementById('schedule-time').value = "";
+            setTimeout(() => document.getElementById('schedule-subject').focus(), 50);
+        }
+
+        function closeCreateScheduleModal() {
+            document.getElementById('modal-schedule').classList.add('hidden');
+            document.getElementById('modal-schedule').classList.remove('flex');
+            currentScheduleDay = ''; currentScheduleSession = '';
+        }
+
+        function saveSchedule() {
+            const subject = document.getElementById('schedule-subject').value.trim();
+            const teacher = document.getElementById('schedule-teacher').value.trim();
+            const room = document.getElementById('schedule-room').value.trim();
+            const time = document.getElementById('schedule-time').value.trim();
+
+            if (!subject) {
+                showToast("Anh Hoàng ơi, tên môn học không được để trống nha! 🌿");
+                return;
+            }
+
+            schedules.push({
+                id: Date.now(), subject: subject, room: room || "Chưa có", teacher: teacher || "Chưa có",
+                day: currentScheduleDay, time: time || "00:00", session: currentScheduleSession
+            });
+
+            closeCreateScheduleModal(); renderSchedule(); showToast(`Đã thêm môn ${subject} vào lịch! ✨`);
+        }
+
+        /* ======================== GHI CHÚ & MARKDOWN ======================== */
         let currentEditingNoteId = null;
 
         function renderNotesList() {
             const grid = document.getElementById('notes-grid');
             if(!grid) return;
-            grid.innerHTML = "";
-
-            if (notesData.length === 0) {
-                grid.innerHTML = `<div class="col-span-full text-center py-10 text-gray-400">Chưa có ghi chú nào. Hãy tạo một ghi chú mới!</div>`;
-                return;
-            }
+            grid.innerHTML = notesData.length ? "" : `<div class="col-span-full text-center py-20 text-slate-500 font-bold">Bạn chưa có ghi chú nào. Nhấn "Tạo ghi chú" để bắt đầu.</div>`;
 
             notesData.forEach(note => {
-                const parsedContent = marked.parse(note.content);
                 grid.innerHTML += `
-                    <div onclick="editNote(${note.id})" class="bg-white border border-[var(--border-soft)] p-5 rounded-[20px] shadow-sm hover-lift flex flex-col h-64 overflow-hidden relative cursor-pointer">
-                        <div class="flex justify-between items-start mb-3">
-                            <h3 class="font-bold text-gray-900 text-lg truncate pr-4">${note.title}</h3>
-                            <span class="text-xs font-medium text-gray-400 bg-gray-50 px-2 py-1 rounded-md">${note.date}</span>
+                    <div onclick="editNote(${note.id})" class="glass-card p-6 rounded-[24px] hover-lift flex flex-col h-64 overflow-hidden relative cursor-pointer">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="font-bold text-slate-900 text-lg truncate pr-3 drop-shadow-sm">${note.title}</h3>
+                            <span class="text-[10px] font-bold text-blue-600 bg-white/70 px-2.5 py-1.5 rounded-lg border border-white shadow-sm uppercase tracking-wider backdrop-blur-md">${note.date}</span>
                         </div>
-                        <div class="prose prose-sm text-gray-600 text-sm flex-1 overflow-hidden relative">
-                            ${parsedContent}
-                            <div class="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-white to-transparent"></div>
+                        <div class="prose prose-sm text-slate-700 text-sm flex-1 overflow-hidden relative font-medium">
+                            ${marked.parse(note.content)}
+                            <div class="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-[rgba(255,255,255,0.7)] to-transparent"></div>
                         </div>
-                    </div>
-                `;
+                    </div>`;
             });
         }
 
@@ -555,418 +592,202 @@
             document.getElementById('note-title-input').focus();
         }
 
-        function editNote(id) {
-            const note = notesData.find(n => n.id === id);
-            if (!note) return;
-            currentEditingNoteId = id; 
-            document.getElementById('note-title-input').value = note.title;
-            document.getElementById('note-content-input').value = note.content;
-            document.getElementById('notes-list-area').classList.add('hidden');
-            document.getElementById('note-editor-area').classList.remove('hidden');
-            document.getElementById('note-editor-area').classList.add('flex');
-            document.getElementById('note-content-input').focus();
-        }
-
         function hideNoteEditor() {
             document.getElementById('notes-list-area').classList.remove('hidden');
             document.getElementById('note-editor-area').classList.add('hidden');
             document.getElementById('note-editor-area').classList.remove('flex');
         }
 
+        function editNote(id) {
+            const note = notesData.find(n => n.id === id);
+            if (!note) return;
+            currentEditingNoteId = id; 
+            document.getElementById('note-title-input').value = note.title;
+            document.getElementById('note-content-input').value = note.content;
+            showNoteEditor();
+        }
+
         function saveNote() {
             const title = document.getElementById('note-title-input').value.trim() || "Ghi chú không tên";
             const content = document.getElementById('note-content-input').value.trim();
-
             if (!content) return;
 
-            const today = new Date();
-            const dateString = `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`;
+            const dateStr = new Date().toLocaleDateString('en-GB'); 
 
-            if (currentEditingNoteId !== null) {
-                const noteIndex = notesData.findIndex(n => n.id === currentEditingNoteId);
-                if (noteIndex !== -1) {
-                    notesData[noteIndex].title = title;
-                    notesData[noteIndex].content = content;
-                    notesData[noteIndex].date = dateString; 
-                }
+            if (currentEditingNoteId) {
+                const idx = notesData.findIndex(n => n.id === currentEditingNoteId);
+                if (idx !== -1) { notesData[idx] = { ...notesData[idx], title, content, date: dateStr }; }
             } else {
-                notesData.unshift({
-                    id: Date.now(),
-                    title: title,
-                    content: content,
-                    date: dateString
-                });
+                notesData.unshift({ id: Date.now(), title, content, date: dateStr });
             }
-
-            hideNoteEditor();
-            renderNotesList();
-            showToast("Đã lưu ghi chú thành công!");
+            hideNoteEditor(); renderNotesList(); showToast("Đã lưu ghi chú thành công!");
         }
 
         function insertMarkdown(type) {
-            const textarea = document.getElementById('note-content-input');
-            const start = textarea.selectionStart;
-            const end = textarea.selectionEnd;
-            const text = textarea.value;
-            const selectedText = text.substring(start, end);
-            let insertion = '';
-            let cursorOffset = 0; 
-            
-            switch(type) {
-                case 'bold': insertion = `**${selectedText || 'chữ đậm'}**`; cursorOffset = selectedText ? insertion.length : 2; break;
-                case 'italic': insertion = `*${selectedText || 'chữ nghiêng'}*`; cursorOffset = selectedText ? insertion.length : 1; break;
-                case 'h1': insertion = `\n# ${selectedText || 'Tiêu đề lớn'}\n`; cursorOffset = selectedText ? insertion.length - 1 : 3; break;
-                case 'h2': insertion = `\n## ${selectedText || 'Tiêu đề phụ'}\n`; cursorOffset = selectedText ? insertion.length - 1 : 4; break;
-                case 'h3': insertion = `\n### ${selectedText || 'Tiêu đề nhỏ'}\n`; cursorOffset = selectedText ? insertion.length - 1 : 5; break;
-                case 'quote': insertion = `\n> ${selectedText || 'Khối trích dẫn'}\n`; cursorOffset = selectedText ? insertion.length - 1 : 3; break;
-                case 'link': insertion = `[${selectedText || 'Văn bản hiển thị'}](https://)`; cursorOffset = selectedText ? insertion.length - 1 : 1; break;
-                case 'image': insertion = `![${selectedText || 'Mô tả ảnh'}](https://link-anh.com/anh.jpg)`; cursorOffset = selectedText ? insertion.length - 1 : 2; break;
-                case 'list': insertion = `\n- ${selectedText || 'Mục danh sách'}\n`; cursorOffset = selectedText ? insertion.length - 1 : 3; break;
-            }
-            
-            textarea.value = text.substring(0, start) + insertion + text.substring(end);
-            textarea.focus();
-            if(!selectedText) {
-                textarea.selectionEnd = start + cursorOffset;
-            }
+            const t = document.getElementById('note-content-input');
+            const s = t.selectionStart, e = t.selectionEnd, txt = t.value, sel = txt.substring(s, e);
+            const inserts = {
+                bold: [`**${sel||'đậm'}**`, 2], italic: [`*${sel||'nghiêng'}*`, 1], h1: [`\n# ${sel||'H1'}\n`, 3],
+                h2: [`\n## ${sel||'H2'}\n`, 4], quote: [`\n> ${sel||'Quote'}\n`, 3], link: [`[${sel||'Text'}](url)`, 1],
+                list: [`\n- ${sel||'Item'}\n`, 3]
+            };
+            if(!inserts[type]) return;
+            t.value = txt.substring(0, s) + inserts[type][0] + txt.substring(e);
+            t.focus(); if(!sel) t.selectionEnd = s + inserts[type][1];
         }
 
-        /* ======================== CHỨC NĂNG XUẤT/NHẬP ZIP GHI CHÚ ======================== */
         async function exportNotesToZip() {
-            if (notesData.length === 0) {
-                alert("Bạn chưa có ghi chú nào để xuất!");
-                return;
-            }
-            
+            if (!notesData.length) return alert("Bạn chưa có ghi chú nào để xuất!");
             const zip = new JSZip();
-            
-            // File hệ thống lưu trữ toàn vẹn dữ liệu gốc để khôi phục
-            zip.file("notes_data.json", JSON.stringify(notesData, null, 2));
-            
-            // Folder chứa các file .md để người dùng có thể đọc bằng các phần mềm khác
-            const mdFolder = zip.folder("Markdown_Files");
-            notesData.forEach(note => {
-                let safeTitle = note.title.replace(/[^a-z0-9A-Z_À-ỹ]/g, '_');
-                mdFolder.file(`${safeTitle}_${note.id}.md`, note.content);
-            });
-
-            try {
-                const content = await zip.generateAsync({type:"blob"});
-                const url = window.URL.createObjectURL(content);
-                const a = document.createElement("a");
-                a.style.display = "none";
-                a.href = url;
-                a.download = "Niyaki_Notes_Backup.zip";
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                document.body.removeChild(a);
-                
-                showToast("Đã xuất toàn bộ ghi chú thành file Zip!");
-            } catch (err) {
-                console.error(err);
-                alert("Đã xảy ra lỗi khi tạo file Zip.");
-            }
+            zip.file("notes.json", JSON.stringify(notesData));
+            const content = await zip.generateAsync({type:"blob"});
+            const a = document.createElement("a"); a.href = URL.createObjectURL(content); a.download = "Niyaki_Notes.zip"; a.click();
+            showToast("Đã tải xuống file Zip Ghi chú!");
         }
 
-        async function importNotesFromZip(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
+        async function importNotesFromZip(e) {
+            const file = e.target.files[0]; if (!file) return;
             try {
-                const zip = new JSZip();
-                const zipContent = await zip.loadAsync(file);
-                
-                if (zipContent.file("notes_data.json")) {
-                    const jsonData = await zipContent.file("notes_data.json").async("string");
-                    const importedNotes = JSON.parse(jsonData);
-                    
-                    if (Array.isArray(importedNotes)) {
-                        importedNotes.forEach(note => {
-                            // Tạo ID mới để tránh trùng lặp dữ liệu cũ
-                            note.id = Date.now() + Math.floor(Math.random() * 1000);
-                            notesData.unshift(note);
-                        });
-                        renderNotesList();
-                        showToast(`Đã khôi phục ${importedNotes.length} ghi chú từ file Zip!`);
-                    }
-                } else {
-                    alert("File Zip không đúng định dạng. Cần có file notes_data.json bên trong!");
-                }
-            } catch (error) {
-                console.error(error);
-                alert("Có lỗi xảy ra khi đọc file Zip!");
-            }
-            
-            // Reset input file để có thể import lại cùng 1 file nếu muốn
-            event.target.value = "";
+                const zip = await new JSZip().loadAsync(file);
+                const data = await zip.file("notes.json").async("string");
+                const arr = JSON.parse(data);
+                if(Array.isArray(arr)) { notesData = arr.map(n => ({...n, id: Date.now()+Math.random()})).concat(notesData); renderNotesList(); showToast("Đã khôi phục Ghi chú thành công!"); }
+            } catch (err) { alert("File Zip không hợp lệ!"); }
+            e.target.value = "";
         }
 
-        /* ======================== CHỨC NĂNG TÀI LIỆU (CHROME TABS STYLE) ======================== */
-        let docGroups = [];
-        let selectedColor = 'blue';
-        let currentOpenGroupId = null;
-
-        const colorMap = {
-            'blue': 'bg-blue-500 text-blue-500 ring-blue-500 border-blue-200 bg-blue-50',
-            'purple': 'bg-purple-500 text-purple-500 ring-purple-500 border-purple-200 bg-purple-50',
-            'pink': 'bg-pink-500 text-pink-500 ring-pink-500 border-pink-200 bg-pink-50',
-            'orange': 'bg-orange-500 text-orange-500 ring-orange-500 border-orange-200 bg-orange-50',
-            'green': 'bg-green-500 text-green-500 ring-green-500 border-green-200 bg-green-50'
+        /* ======================== TÀI LIỆU (GLASS CARDS) ======================== */
+        const docColors = {
+            blue: 'bg-blue-100/50 text-blue-600 border-blue-200/60',
+            purple: 'bg-purple-100/50 text-purple-600 border-purple-200/60',
+            pink: 'bg-pink-100/50 text-pink-600 border-pink-200/60',
+            orange: 'bg-orange-100/50 text-orange-600 border-orange-200/60',
+            emerald: 'bg-emerald-100/50 text-emerald-600 border-emerald-200/60'
         };
 
         function renderDocGroups() {
             const grid = document.getElementById('doc-groups-grid');
             if(!grid) return;
-            grid.innerHTML = "";
+            grid.innerHTML = docGroups.length ? "" : `<div class="col-span-full text-center py-20 text-slate-500 font-bold">Bạn chưa có nhóm tài liệu nào.</div>`;
 
-            if (docGroups.length === 0) {
-                grid.innerHTML = `
-                    <div class="col-span-full flex flex-col items-center justify-center py-16">
-                        <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4 text-gray-400">
-                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z"></path></svg>
-                        </div>
-                        <p class="text-gray-500 font-medium">Bạn chưa có tài liệu nào.</p>
-                        <p class="text-sm text-gray-400 mt-1">Vui lòng tạo tài liệu để quản lý các liên kết.</p>
-                    </div>`;
-                return;
-            }
-
-            docGroups.forEach(group => {
-                const colorClasses = colorMap[group.color].split(' ');
-                const bgMain = colorClasses[0]; 
-                const bgSoft = colorClasses[4];
-                const borderSoft = colorClasses[3];
-                const textCol = colorClasses[1];
-
+            docGroups.forEach(g => {
+                const c = docColors[g.color].split(' ');
                 grid.innerHTML += `
-                    <div onclick="openGroupDetails(${group.id})" class="bg-white border border-[var(--border-soft)] rounded-[20px] p-5 shadow-sm hover-lift cursor-pointer relative overflow-hidden flex flex-col h-36">
-                        <div class="absolute top-0 left-0 right-0 h-1.5 ${bgMain}"></div>
-                        <div class="flex items-start gap-4 mt-2">
-                            <div class="w-12 h-12 rounded-[14px] ${bgSoft} ${textCol} flex items-center justify-center flex-shrink-0 border ${borderSoft}">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
+                    <div onclick="openGroupDetails(${g.id})" class="glass-card rounded-[24px] p-6 cursor-pointer hover-lift flex flex-col justify-center h-40">
+                        <div class="flex items-center gap-5">
+                            <div class="w-14 h-14 rounded-2xl ${c[0]} ${c[1]} border ${c[2]} flex items-center justify-center flex-shrink-0 shadow-sm backdrop-blur-md">
+                                <svg class="w-7 h-7 drop-shadow-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
                             </div>
-                            <div class="flex-1 min-w-0 pt-1">
-                                <h3 class="font-bold text-gray-900 text-base truncate">${group.name}</h3>
-                                <p class="text-xs text-gray-500 mt-1.5 font-medium">${group.links.length} tài liệu web</p>
+                            <div class="flex-1 min-w-0">
+                                <h3 class="font-bold text-slate-900 text-[16px] truncate drop-shadow-sm">${g.name}</h3>
+                                <p class="text-[13px] text-slate-600 mt-1 font-semibold">${g.links.length} tài liệu web</p>
                             </div>
                         </div>
-                    </div>
-                `;
+                    </div>`;
             });
         }
 
+        function renderLinks() {
+            const g = docGroups.find(x => x.id === currentOpenGroupId);
+            const list = document.getElementById('links-list-container');
+            if(!list || !g) return;
+            list.innerHTML = g.links.length ? "" : `<div class="text-center py-16 text-slate-500 font-bold">Chưa có tài liệu nào trong thư mục này.</div>`;
+            g.links.forEach(l => {
+                list.innerHTML += `
+                    <a href="${l.url}" target="_blank" class="glass-card p-5 rounded-[20px] flex items-center gap-4 hover:border-white hover:bg-white/80 transition-all group cursor-pointer mb-4 shadow-sm">
+                        <div class="w-12 h-12 rounded-xl bg-white/60 border border-white/80 flex items-center justify-center text-slate-500 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors shadow-sm backdrop-blur-sm">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h4 class="text-[15px] font-bold text-slate-900 truncate">${l.name}</h4>
+                            <p class="text-[13px] text-slate-600 font-medium truncate mt-1">${l.url}</p>
+                        </div>
+                        <div class="text-slate-400 group-hover:text-blue-600 transition-colors pr-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                        </div>
+                    </a>`;
+            });
+        }
+
+        // Modals Logic
         function openCreateGroupModal() {
             document.getElementById('modal-group').classList.remove('hidden');
             document.getElementById('modal-group').classList.add('flex');
             document.getElementById('group-name-input').value = "";
-            const firstColorBtn = document.querySelector('.color-btn');
-            if(firstColorBtn) selectColor('blue', firstColorBtn);
+            selectColor('blue', document.querySelector('.color-btn'));
             setTimeout(() => document.getElementById('group-name-input').focus(), 50);
         }
-
-        function closeCreateGroupModal() {
-            document.getElementById('modal-group').classList.add('hidden');
-            document.getElementById('modal-group').classList.remove('flex');
+        function closeCreateGroupModal() { document.getElementById('modal-group').classList.add('hidden'); document.getElementById('modal-group').classList.remove('flex'); }
+        function selectColor(col, btn) {
+            selectedColor = col;
+            document.querySelectorAll('.color-btn').forEach(b => { b.classList.remove('ring-2'); b.classList.add('ring-0'); });
+            btn.classList.remove('ring-0'); btn.classList.add('ring-2');
         }
-
-        function selectColor(color, btnElement) {
-            selectedColor = color;
-            document.querySelectorAll('.color-btn').forEach(btn => {
-                btn.classList.remove('ring-2');
-                btn.classList.add('ring-0');
-            });
-            btnElement.classList.remove('ring-0');
-            btnElement.classList.add('ring-2');
-        }
-
         function saveGroup() {
-            const name = document.getElementById('group-name-input').value.trim();
-            if (!name) return;
-
-            docGroups.push({
-                id: Date.now(),
-                name: name,
-                color: selectedColor,
-                links: []
-            });
-
-            closeCreateGroupModal();
-            renderDocGroups();
-            showToast("Tạo thư mục tài liệu thành công!");
+            const name = document.getElementById('group-name-input').value.trim(); if(!name) return;
+            docGroups.push({ id: Date.now(), name, color: selectedColor, links: [] });
+            closeCreateGroupModal(); renderDocGroups(); showToast("Tạo thư mục tài liệu thành công!");
         }
 
         function openGroupDetails(id) {
-            const group = docGroups.find(g => g.id === id);
-            if (!group) return;
-
+            const g = docGroups.find(x => x.id === id); if(!g) return;
             currentOpenGroupId = id;
-
-            document.getElementById('current-group-title').innerHTML = `
-                <span class="w-3 h-3 rounded-full inline-block ${colorMap[group.color].split(' ')[0]}"></span>
-                ${group.name}
-            `;
-
+            document.getElementById('current-group-title').innerHTML = g.name;
             document.getElementById('doc-groups-area').classList.add('hidden');
             document.getElementById('single-group-area').classList.remove('hidden');
             document.getElementById('single-group-area').classList.add('flex');
             document.getElementById('btn-create-doc-group').classList.add('hidden');
-
             renderLinks();
         }
-
         function closeGroupDetails() {
             currentOpenGroupId = null;
             document.getElementById('doc-groups-area').classList.remove('hidden');
             document.getElementById('single-group-area').classList.add('hidden');
             document.getElementById('single-group-area').classList.remove('flex');
             document.getElementById('btn-create-doc-group').classList.remove('hidden');
-            
             renderDocGroups();
-        }
-
-        function renderLinks() {
-            const group = docGroups.find(g => g.id === currentOpenGroupId);
-            const container = document.getElementById('links-list-container');
-            container.innerHTML = "";
-
-            if (group.links.length === 0) {
-                container.innerHTML = `<div class="text-center py-10 text-gray-400 font-medium">Bạn chưa có tài liệu web nào. Hãy tạo mới!</div>`;
-                return;
-            }
-
-            group.links.forEach(link => {
-                container.innerHTML += `
-                    <a href="${link.url}" target="_blank" class="bg-white border border-[var(--border-soft)] p-4 rounded-2xl shadow-sm hover:shadow-md transition-all flex items-center justify-between group cursor-pointer">
-                        <div class="flex items-center gap-4 min-w-0">
-                            <div class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center flex-shrink-0 text-gray-400 group-hover:bg-blue-50 group-hover:text-blue-500 transition-colors">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
-                            </div>
-                            <div class="min-w-0">
-                                <h4 class="font-bold text-gray-900 text-sm truncate">${link.name}</h4>
-                                <p class="text-xs text-gray-400 truncate mt-0.5">${link.url}</p>
-                            </div>
-                        </div>
-                        <div class="text-gray-300 group-hover:text-blue-500 transition-colors pr-2">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
-                        </div>
-                    </a>
-                `;
-            });
         }
 
         function openCreateLinkModal() {
             document.getElementById('modal-link').classList.remove('hidden');
             document.getElementById('modal-link').classList.add('flex');
-            document.getElementById('link-name-input').value = "";
-            document.getElementById('link-url-input').value = "";
+            document.getElementById('link-name-input').value = ""; document.getElementById('link-url-input').value = "";
             setTimeout(() => document.getElementById('link-name-input').focus(), 50);
         }
-
-        function closeCreateLinkModal() {
-            document.getElementById('modal-link').classList.add('hidden');
-            document.getElementById('modal-link').classList.remove('flex');
-        }
-
+        function closeCreateLinkModal() { document.getElementById('modal-link').classList.add('hidden'); document.getElementById('modal-link').classList.remove('flex'); }
         function saveLink() {
-            const name = document.getElementById('link-name-input').value.trim();
-            const url = document.getElementById('link-url-input').value.trim();
-
-            if (!name || !url) return;
-
-            let formattedUrl = url;
-            if (!url.startsWith('http://') && !url.startsWith('https://')) {
-                formattedUrl = 'https://' + url;
-            }
-
-            const group = docGroups.find(g => g.id === currentOpenGroupId);
-            if (group) {
-                group.links.push({
-                    id: Date.now(),
-                    name: name,
-                    url: formattedUrl
-                });
-            }
-
-            closeCreateLinkModal();
-            renderLinks();
-            showToast("Thêm liên kết tài liệu thành công!");
+            const name = document.getElementById('link-name-input').value.trim(), url = document.getElementById('link-url-input').value.trim();
+            if(!name || !url) return;
+            const g = docGroups.find(x => x.id === currentOpenGroupId);
+            if(g) { g.links.push({ id: Date.now(), name, url: url.startsWith('http') ? url : 'https://'+url }); }
+            closeCreateLinkModal(); renderLinks(); showToast("Đã thêm liên kết web!");
         }
 
-        /* ======================== CHỨC NĂNG XUẤT/NHẬP ZIP TÀI LIỆU ======================== */
         async function exportDocsToZip() {
-            if (docGroups.length === 0) {
-                alert("Bạn chưa có tài liệu nào để xuất!");
-                return;
-            }
-            
+            if (!docGroups.length) return alert("Bạn chưa có tài liệu nào để xuất!");
             const zip = new JSZip();
-            
-            // File hệ thống lưu trữ toàn vẹn dữ liệu gốc để khôi phục
-            zip.file("documents_data.json", JSON.stringify(docGroups, null, 2));
-
-            try {
-                const content = await zip.generateAsync({type:"blob"});
-                const url = window.URL.createObjectURL(content);
-                const a = document.createElement("a");
-                a.style.display = "none";
-                a.href = url;
-                a.download = "Niyaki_Documents_Backup.zip";
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                document.body.removeChild(a);
-                
-                showToast("Đã xuất toàn bộ tài liệu thành file Zip!");
-            } catch (err) {
-                console.error(err);
-                alert("Đã xảy ra lỗi khi tạo file Zip.");
-            }
+            zip.file("docs.json", JSON.stringify(docGroups));
+            const content = await zip.generateAsync({type:"blob"});
+            const a = document.createElement("a"); a.href = URL.createObjectURL(content); a.download = "Niyaki_Docs.zip"; a.click();
+            showToast("Đã tải xuống file Zip Tài liệu!");
         }
-
-        async function importDocsFromZip(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
+        async function importDocsFromZip(e) {
+            const file = e.target.files[0]; if (!file) return;
             try {
-                const zip = new JSZip();
-                const zipContent = await zip.loadAsync(file);
-                
-                if (zipContent.file("documents_data.json")) {
-                    const jsonData = await zipContent.file("documents_data.json").async("string");
-                    const importedDocs = JSON.parse(jsonData);
-                    
-                    if (Array.isArray(importedDocs)) {
-                        importedDocs.forEach(group => {
-                            // Tạo ID mới để tránh trùng lặp
-                            group.id = Date.now() + Math.floor(Math.random() * 1000);
-                            
-                            // Cũng làm mới ID cho các link bên trong
-                            if(group.links && Array.isArray(group.links)) {
-                                group.links.forEach(link => {
-                                    link.id = Date.now() + Math.floor(Math.random() * 1000);
-                                });
-                            } else {
-                                group.links = [];
-                            }
-                            
-                            docGroups.push(group);
-                        });
-                        renderDocGroups();
-                        showToast(`Đã khôi phục ${importedDocs.length} thư mục từ file Zip!`);
-                    }
-                } else {
-                    alert("File Zip không đúng định dạng. Cần có file documents_data.json bên trong!");
+                const zip = await new JSZip().loadAsync(file);
+                const data = await zip.file("docs.json").async("string");
+                const arr = JSON.parse(data);
+                if(Array.isArray(arr)) { 
+                    arr.forEach(g => { g.id = Date.now()+Math.random(); if(g.links) g.links.forEach(l => l.id = Date.now()+Math.random()); docGroups.push(g); });
+                    renderDocGroups(); showToast("Đã khôi phục Tài liệu thành công!"); 
                 }
-            } catch (error) {
-                console.error(error);
-                alert("Có lỗi xảy ra khi đọc file Zip!");
-            }
-            
-            // Reset input file
-            event.target.value = "";
+            } catch (err) { alert("File Zip không hợp lệ!"); }
+            e.target.value = "";
         }
 
+        // Khởi tạo các Grid khi load trang
+        renderNotesList();
+        renderDocGroups();
     </script>
 </body>
-</html>
+</html>1
