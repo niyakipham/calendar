@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -27,7 +26,7 @@
             background-color: #E2E8F0;
         }
 
-        /* 🌊 Lớp nền Gradient chuyển động mềm mại tạo chiều sâu cho kính mờ (Đã chuyển sang tone Xanh dịu mát) */
+        /* 🌊 Lớp nền Gradient chuyển động mềm mại tạo chiều sâu cho kính mờ */
         .mesh-background {
             position: fixed;
             top: 0; left: 0; width: 100vw; height: 100vh;
@@ -42,10 +41,9 @@
             opacity: 0.6;
             animation: float 20s infinite ease-in-out alternate;
         }
-        /* Hân đổi các dải màu hồng/vàng cũ sang các sắc Xanh tinh tế */
-        .blob-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: #93C5FD; } /* Xanh dương mềm mại */
-        .blob-2 { top: 40%; right: -10%; width: 45vw; height: 45vw; background: #A7F3D0; animation-delay: -5s; } /* Xanh ngọc lục bảo nhạt */
-        .blob-3 { bottom: -20%; left: 20%; width: 60vw; height: 60vw; background: #C4B5FD; animation-delay: -10s; } /* Xanh tím pastel */
+        .blob-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: #93C5FD; } 
+        .blob-2 { top: 40%; right: -10%; width: 45vw; height: 45vw; background: #A7F3D0; animation-delay: -5s; } 
+        .blob-3 { bottom: -20%; left: 20%; width: 60vw; height: 60vw; background: #C4B5FD; animation-delay: -10s; } 
 
         @keyframes float {
             0% { transform: translate(0, 0) scale(1); }
@@ -83,13 +81,11 @@
             z-index: 10;
         }
 
-        /* Thanh cuộn kính mờ */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.15); border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: rgba(0, 0, 0, 0.25); }
 
-        /* Viền đứt khúc sắc nét trên kính */
         .dashed-border-y {
             background-image: linear-gradient(to bottom, transparent 50%, rgba(255,255,255,0.8) 50%);
             background-size: 1px 16px;
@@ -110,7 +106,6 @@
 </head>
 <body class="h-screen w-full p-4 md:p-6 lg:p-8 flex items-center justify-center relative">
 
-    <!-- Lớp nền Đốm màu mờ ảo cho Glassmorphism -->
     <div class="mesh-background">
         <div class="blob blob-1"></div>
         <div class="blob blob-2"></div>
@@ -120,9 +115,8 @@
     <!-- CẤU TRÚC LAYOUT CHỐNG BIẾN DẠNG + GLASS PANEL -->
     <div class="w-full h-full max-w-[1600px] glass-panel rounded-[2rem] flex overflow-hidden relative z-10">
         
-        <!-- ==================== SIDEBAR (KÍNH MỜ) ==================== -->
+        <!-- ==================== SIDEBAR ==================== -->
         <aside class="w-64 lg:w-72 flex flex-col z-20 flex-shrink-0 glass-sidebar">
-            <!-- Logo -->
             <div class="p-6 lg:p-8 flex items-center gap-3">
                 <div class="w-10 h-10 rounded-xl bg-white/60 border border-white/80 flex items-center justify-center shadow-sm backdrop-blur-md">
                     <svg class="w-6 h-6 text-blue-600 drop-shadow-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477-4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
@@ -130,7 +124,6 @@
                 <h1 class="font-bold text-xl lg:text-2xl tracking-tight text-slate-800">Niyaki</h1>
             </div>
 
-            <!-- Tabs Điều Hướng -->
             <nav class="flex-1 px-4 lg:px-6 py-2 space-y-2">
                 <a href="#" id="nav-calendar" onclick="switchTab('calendar')" class="nav-item active flex items-center gap-4 px-4 py-3.5 bg-white/70 text-blue-600 rounded-2xl border border-white shadow-sm transition-all font-bold backdrop-blur-md">
                     <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
@@ -149,12 +142,10 @@
         </aside>
 
         <!-- ==================== MAIN WORKSPACE ==================== -->
-        <!-- Khu vực làm việc trong suốt nhẹ -->
         <main class="flex-1 flex flex-col min-w-0 bg-white/10 relative">
             
             <!-- VIEW 1: LỊCH HỌC -->
             <div id="view-calendar" class="flex flex-col h-full w-full">
-                <!-- Header View Kính -->
                 <header class="h-[80px] flex-shrink-0 flex items-center justify-between px-6 lg:px-8 border-b border-white/50 bg-white/20 backdrop-blur-xl z-10">
                     <div>
                         <h2 class="text-xl font-bold text-slate-800 tracking-tight">Thời khóa biểu</h2>
@@ -163,10 +154,8 @@
                 </header>
 
                 <div class="flex-1 overflow-auto p-6 relative">
-                    <!-- Khối bảng lịch Thủy Tinh (Bao bọc bởi min-w để không bị ép nhỏ) -->
                     <div class="min-w-[1000px] h-full flex flex-col glass-panel rounded-3xl overflow-hidden shadow-sm">
                         
-                        <!-- Header Các Ngày -->
                         <div class="flex flex-shrink-0 border-b border-white/60 bg-white/30">
                             <div class="w-20 flex-shrink-0 border-r border-white/60 flex items-center justify-center">
                                 <span class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Ca</span>
@@ -174,7 +163,6 @@
                             <div id="calendarHeader" class="flex-1 grid grid-cols-7"></div>
                         </div>
 
-                        <!-- Lưới Môn Học -->
                         <div class="flex-1 flex bg-white/10">
                             <div class="w-20 flex-shrink-0 flex flex-col border-r border-white/60 bg-white/30">
                                 <div class="flex-1 flex items-center justify-center border-b border-dashed border-white/60">
@@ -409,8 +397,12 @@
             }
         }
 
-        /* DỮ LIỆU CHUNG (MÔ PHỎNG DATABASE) */
-        const schedules = [
+        /* ======================== 🌸 HÂN'S LOCALSTORAGE MAGIC 🌸 ======================== */
+        // Khởi tạo Dữ liệu từ LocalStorage (Chiếc rương phép thuật của Hân)
+        
+        // 1. Dữ liệu lịch học
+        const savedSchedules = localStorage.getItem('niyaki_schedules');
+        let schedules = savedSchedules ? JSON.parse(savedSchedules) : [
             { id: 1, subject: "Kiến trúc máy tính", room: "B201", teacher: "Vũ Trọng Chiến", day: "Thứ 2", time: "Tiết 1-2", session: "Sáng" },
             { id: 2, subject: "Anh văn cơ sở 2", room: "B201", teacher: "Mai Văn Sao", day: "Thứ 2", time: "Tiết 3-5", session: "Sáng" },
             { id: 3, subject: "Toán cao cấp 3", room: "B201", teacher: "Đoàn Thị Bích", day: "Thứ 3", time: "Tiết 2-4", session: "Chiều" },
@@ -420,11 +412,23 @@
             { id: 7, subject: "Anh văn cơ sở 2", room: "B201", teacher: "Mai Văn Sao", day: "Thứ 6", time: "Tiết 1-2", session: "Sáng" },
             { id: 8, subject: "Lập trình Python", room: "B201", teacher: "Đỗ Văn Tuyến", day: "Thứ 6", time: "Tiết 3-5", session: "Sáng" }
         ];
-        let notesData = [];
-        let docGroups = [];
+
+        // 2. Dữ liệu ghi chú
+        const savedNotes = localStorage.getItem('niyaki_notes');
+        let notesData = savedNotes ? JSON.parse(savedNotes) : [];
+
+        // 3. Dữ liệu tài liệu
+        const savedDocGroups = localStorage.getItem('niyaki_docGroups');
+        let docGroups = savedDocGroups ? JSON.parse(savedDocGroups) : [];
+
+        // Hàm hỗ trợ lưu tất cả vào LocalStorage
+        function saveDataToLocalStorage() {
+            localStorage.setItem('niyaki_schedules', JSON.stringify(schedules));
+            localStorage.setItem('niyaki_notes', JSON.stringify(notesData));
+            localStorage.setItem('niyaki_docGroups', JSON.stringify(docGroups));
+        }
 
         /* ======================== LỊCH HỌC (GLASSMORPHISM) ======================== */
-        // Style mây trắng viền mỏng kính
         const lightThemes = [
             { card: 'bg-blue-50/70 border-blue-200/60', text: 'text-blue-800', icon: 'bg-white/80 text-blue-500 border-white' },
             { card: 'bg-indigo-50/70 border-indigo-200/60', text: 'text-indigo-800', icon: 'bg-white/80 text-indigo-500 border-white' },
@@ -556,7 +560,10 @@
                 day: currentScheduleDay, time: time || "00:00", session: currentScheduleSession
             });
 
-            closeCreateScheduleModal(); renderSchedule(); showToast(`Đã thêm môn ${subject} vào lịch! ✨`);
+            saveDataToLocalStorage(); // ✨ Gọi thần chú lưu trữ
+            closeCreateScheduleModal(); 
+            renderSchedule(); 
+            showToast(`Đã thêm môn ${subject} vào lịch! ✨`);
         }
 
         /* ======================== GHI CHÚ & MARKDOWN ======================== */
@@ -620,7 +627,11 @@
             } else {
                 notesData.unshift({ id: Date.now(), title, content, date: dateStr });
             }
-            hideNoteEditor(); renderNotesList(); showToast("Đã lưu ghi chú thành công!");
+            
+            saveDataToLocalStorage(); // ✨ Gọi thần chú lưu trữ
+            hideNoteEditor(); 
+            renderNotesList(); 
+            showToast("Đã lưu ghi chú thành công!");
         }
 
         function insertMarkdown(type) {
@@ -651,7 +662,12 @@
                 const zip = await new JSZip().loadAsync(file);
                 const data = await zip.file("notes.json").async("string");
                 const arr = JSON.parse(data);
-                if(Array.isArray(arr)) { notesData = arr.map(n => ({...n, id: Date.now()+Math.random()})).concat(notesData); renderNotesList(); showToast("Đã khôi phục Ghi chú thành công!"); }
+                if(Array.isArray(arr)) { 
+                    notesData = arr.map(n => ({...n, id: Date.now()+Math.random()})).concat(notesData); 
+                    saveDataToLocalStorage(); // ✨ Lưu lại sau khi import
+                    renderNotesList(); 
+                    showToast("Đã khôi phục Ghi chú thành công!"); 
+                }
             } catch (err) { alert("File Zip không hợp lệ!"); }
             e.target.value = "";
         }
@@ -726,7 +742,11 @@
         function saveGroup() {
             const name = document.getElementById('group-name-input').value.trim(); if(!name) return;
             docGroups.push({ id: Date.now(), name, color: selectedColor, links: [] });
-            closeCreateGroupModal(); renderDocGroups(); showToast("Tạo thư mục tài liệu thành công!");
+            
+            saveDataToLocalStorage(); // ✨ Lưu lại nè
+            closeCreateGroupModal(); 
+            renderDocGroups(); 
+            showToast("Tạo thư mục tài liệu thành công!");
         }
 
         function openGroupDetails(id) {
@@ -760,7 +780,11 @@
             if(!name || !url) return;
             const g = docGroups.find(x => x.id === currentOpenGroupId);
             if(g) { g.links.push({ id: Date.now(), name, url: url.startsWith('http') ? url : 'https://'+url }); }
-            closeCreateLinkModal(); renderLinks(); showToast("Đã thêm liên kết web!");
+            
+            saveDataToLocalStorage(); // ✨ Nhớ lưu lại cả link con nha
+            closeCreateLinkModal(); 
+            renderLinks(); 
+            showToast("Đã thêm liên kết web!");
         }
 
         async function exportDocsToZip() {
@@ -779,7 +803,9 @@
                 const arr = JSON.parse(data);
                 if(Array.isArray(arr)) { 
                     arr.forEach(g => { g.id = Date.now()+Math.random(); if(g.links) g.links.forEach(l => l.id = Date.now()+Math.random()); docGroups.push(g); });
-                    renderDocGroups(); showToast("Đã khôi phục Tài liệu thành công!"); 
+                    saveDataToLocalStorage(); // ✨ Lưu lại sau khi import
+                    renderDocGroups(); 
+                    showToast("Đã khôi phục Tài liệu thành công!"); 
                 }
             } catch (err) { alert("File Zip không hợp lệ!"); }
             e.target.value = "";
@@ -790,4 +816,4 @@
         renderDocGroups();
     </script>
 </body>
-</html>1
+</html>
